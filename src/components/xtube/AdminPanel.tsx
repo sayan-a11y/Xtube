@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Film, FolderOpen, Users, BarChart3, MessageSquare, Settings,
   LogOut, Menu, X, Eye, Heart, HardDrive, Play, Trash2, Edit3, Search, Plus, Check,
   Lock, Info, ChevronRight, FileVideo, AlertTriangle, Filter, MoreVertical,
-  CheckCircle2, Clock, Share2, ArrowUpRight, Download, Maximize2
+  CheckCircle2, Clock, Share2, ArrowUpRight, Download, Maximize2, ChevronLeft
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 

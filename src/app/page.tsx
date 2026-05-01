@@ -199,6 +199,35 @@ export default function Home() {
       ) : (
         <main className="pt-16">
 
+          {/* Category Tabs - Dynamic from Admin */}
+          <div className="sticky top-14 z-30 bg-[#0f0f0f]/95 backdrop-blur-md py-4 overflow-x-auto no-scrollbar border-b border-white/5">
+            <div className="flex items-center gap-3 px-4 md:px-6 w-max mx-auto md:mx-0 min-w-full md:justify-start">
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  selectedCategory === 'All'
+                    ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                All Content
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.name)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-white/5 ${
+                    selectedCategory === cat.name
+                      ? 'bg-[#ff2d2d] text-white shadow-[0_0_20px_rgba(255,45,45,0.3)] border-[#ff2d2d]'
+                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="px-4 md:px-6 lg:px-8 mt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-10">
               {videosLoading ? (

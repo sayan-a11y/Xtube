@@ -155,10 +155,15 @@ export default function VideoCard({ video }: VideoCardProps) {
           <h3 className="text-[14px] font-semibold text-white line-clamp-2 leading-tight group-hover:text-white transition-colors mb-1.5">
             {video.title}
           </h3>
-          <div className="flex flex-col text-[12px] text-[#aaaaaa]">
-            <div className="flex items-center gap-1 hover:text-white transition-colors">
-              <span>Xtube Media</span>
-              <CheckCircle2 className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-1 hover:text-white transition-colors">
+                <span>Xtube Media</span>
+                <CheckCircle2 className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
+              </div>
+              <span className="w-1 h-1 rounded-full bg-white/20" />
+              <span className="text-[10px] font-black text-[#ff2d2d] uppercase tracking-tighter bg-[#ff2d2d]/10 px-1.5 py-0.5 rounded-md">
+                {video.category}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span>{formatViews(video.views)}</span>
@@ -166,7 +171,6 @@ export default function VideoCard({ video }: VideoCardProps) {
               <span>{new Date(video.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
-        </div>
       </div>
     </div>
   )
