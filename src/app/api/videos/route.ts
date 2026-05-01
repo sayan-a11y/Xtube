@@ -35,7 +35,14 @@ export async function GET(request: NextRequest) {
 
     const total = await db.video.count({ where })
 
-    return NextResponse.json({ videos, total })
+    return NextResponse.json(
+      { videos, total },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching videos:', error)
     return NextResponse.json({ error: 'Failed to fetch videos' }, { status: 500 })

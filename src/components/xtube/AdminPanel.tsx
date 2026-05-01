@@ -390,48 +390,83 @@ function UploadTab() {
     setUploading(true)
     setUploadProgress(0)
 
-    const formData = new FormData()
-    formData.append('video', videoFile)
-    formData.append('title', title)
-    formData.append('description', description)
-    formData.append('category', category)
+    try {
+      // 1. Get Presigned URL
+      const presignedRes = await fetch('/api/admin/upload/presigned', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: videoFile.name,
+          contentType: videoFile.type || 'video/mp4'
+        })
+      })
 
-    const xhr = new XMLHttpRequest()
+      if (!presignedRes.ok) throw new Error('Failed to get upload URL')
+      const { uploadUrl, publicUrl, videoId } = await presignedRes.json()
 
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100)
-        setUploadProgress(percent)
-      }
-    })
+      // 2. Direct Upload to R2 via XHR
+      const xhr = new XMLHttpRequest()
+      xhr.open('PUT', uploadUrl)
+      xhr.setRequestHeader('Content-Type', videoFile.type || 'video/mp4')
 
-    xhr.addEventListener('load', () => {
-      setUploading(false)
-      if (xhr.status >= 200 && xhr.status < 300) {
-        toast({ title: 'Upload successful!', description: `"${title}" has been uploaded.` })
-        setTitle('')
-        setDescription('')
-        setCategory('Uncategorized')
-        setVideoFile(null)
-        setUploadProgress(0)
-        if (fileInputRef.current) fileInputRef.current.value = ''
-      } else {
-        try {
-          const data = JSON.parse(xhr.responseText)
-          toast({ title: 'Upload failed', description: data.error || 'Unknown error', variant: 'destructive' })
-        } catch {
-          toast({ title: 'Upload failed', description: 'Unknown error', variant: 'destructive' })
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(percent)
+        }
+      })
+
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // 3. Sync metadata to DB
+          try {
+            const syncRes = await fetch('/api/admin/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: videoId,
+                title,
+                description,
+                category,
+                filePath: publicUrl,
+                size: videoFile.size,
+                duration: '0:00' // Placeholder, will be updated on play or via serverless later
+              })
+            })
+
+            if (syncRes.ok) {
+              toast({ title: 'Upload successful!', description: `"${title}" has been uploaded.` })
+              setTitle('')
+              setDescription('')
+              setCategory('Uncategorized')
+              setVideoFile(null)
+              setUploadProgress(0)
+              if (fileInputRef.current) fileInputRef.current.value = ''
+            } else {
+              throw new Error('Failed to sync database')
+            }
+          } catch (err: any) {
+            toast({ title: 'Sync failed', description: err.message, variant: 'destructive' })
+          } finally {
+            setUploading(false)
+          }
+        } else {
+          setUploading(false)
+          toast({ title: 'Upload failed', description: 'R2 rejection', variant: 'destructive' })
         }
       }
-    })
 
-    xhr.addEventListener('error', () => {
+      xhr.onerror = () => {
+        setUploading(false)
+        toast({ title: 'Upload failed', description: 'Network error during R2 upload', variant: 'destructive' })
+      }
+
+      xhr.send(videoFile)
+
+    } catch (err: any) {
       setUploading(false)
-      toast({ title: 'Upload failed', description: 'Network error', variant: 'destructive' })
-    })
-
-    xhr.open('POST', '/api/admin/upload')
-    xhr.send(formData)
+      toast({ title: 'Process failed', description: err.message, variant: 'destructive' })
+    }
   }
 
   return (

@@ -1,5 +1,6 @@
-import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const r2Client = new S3Client({
   region: 'auto',
@@ -26,6 +27,24 @@ export const uploadToR2 = async (file: Buffer, fileName: string, contentType: st
     ? process.env.R2_PUBLIC_DOMAIN 
     : `https://${process.env.R2_PUBLIC_DOMAIN}`;
   return `${publicDomain}/${fileName}`;
+};
+
+export const getPresignedUrl = async (fileName: string, contentType: string) => {
+  const command = new PutObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: fileName,
+    ContentType: contentType,
+  });
+
+  const url = await getSignedUrl(r2Client, command, { expiresIn: 3600 });
+  const publicDomain = process.env.R2_PUBLIC_DOMAIN?.startsWith('http') 
+    ? process.env.R2_PUBLIC_DOMAIN 
+    : `https://${process.env.R2_PUBLIC_DOMAIN}`;
+  
+  return {
+    uploadUrl: url,
+    publicUrl: `${publicDomain}/${fileName}`
+  };
 };
 
 export const deleteFromR2 = async (key: string) => {
