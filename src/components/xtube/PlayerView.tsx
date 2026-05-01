@@ -762,8 +762,8 @@ export default function PlayerView() {
               {isBuffering && isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-20 pointer-events-none">
                   <div className="relative">
-                    <Loader2 className="w-16 h-16 text-[#ff0000] animate-spin" />
-                    <div className="absolute inset-0 blur-xl bg-[#ff0000]/20 rounded-full animate-pulse" />
+                    <Loader2 className="w-16 h-16 text-[#ff2d2d] animate-spin" />
+                    <div className="absolute inset-0 blur-xl bg-[#ff2d2d]/20 rounded-full animate-pulse" />
                   </div>
                 </div>
               )}

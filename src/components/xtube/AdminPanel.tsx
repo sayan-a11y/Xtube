@@ -147,7 +147,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-8 border-b border-white/5">
-        <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff0000]/20">
+        <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff2d2d]/20">
           X
         </div>
         <span className="text-xl font-bold text-white tracking-tight">tube</span>
@@ -260,7 +260,7 @@ function DashboardTab() {
           return (
             <div
               key={card.label}
-              className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-6 hover:border-[#ff0000]/30 transition-all group shadow-xl"
+              className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-6 hover:border-[#ff2d2d]/30 transition-all group shadow-xl"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-gray-400 text-sm">{card.label}</span>

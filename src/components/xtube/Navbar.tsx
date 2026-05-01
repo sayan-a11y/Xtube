@@ -1,14 +1,24 @@
 'use client'
 
 import { useAppStore } from '@/store/useAppStore'
-import { Search, User, X } from 'lucide-react'
+import { Search, Bell, Home, Grid3X3, User, Play } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 
+const NAV_ITEMS = [
+  { label: 'Home', key: 'home' },
+  { label: 'Movies', key: 'movies' },
+  { label: 'Categories', key: 'categories' },
+  { label: 'My List', key: 'mylist' },
+] as const
+
+type NavKey = (typeof NAV_ITEMS)[number]['key']
+
 export default function Navbar() {
-  const { searchQuery, setSearchQuery, setShowAdminLogin, goHome } = useAppStore()
+  const { searchQuery, setSearchQuery, setShowAdminLogin, goHome, setCurrentView } = useAppStore()
 
   const [scrolled, setScrolled] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [activeNav, setActiveNav] = useState<NavKey>('home')
 
   // Hidden admin access: track rapid clicks on logo
   const clickCountRef = useRef(0)
@@ -16,7 +26,9 @@ export default function Navbar() {
 
   // Scroll listener
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50)
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
@@ -25,104 +37,152 @@ export default function Navbar() {
   // Close mobile search on escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileSearchOpen(false)
+      if (e.key === 'Escape') {
+        setMobileSearchOpen(false)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const handleLogoClick = useCallback(() => {
-    // Hidden admin: 7 rapid clicks triggers login
-    clickCountRef.current += 1
-    if (clickTimerRef.current) clearTimeout(clickTimerRef.current)
-    clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0 }, 2000)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
+    if (isMobile) {
+      // On mobile, clicking logo just refreshes the page
+      window.location.reload()
+      return
+    }
+
+    // Desktop: hidden admin access logic
+    clickCountRef.current += 1
+
+    // Clear any existing timer
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current)
+    }
+
+    // Reset click count after 2 seconds
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0
+    }, 2000)
+
+    // If 7 clicks within 2 seconds, trigger admin login
     if (clickCountRef.current >= 7) {
       clickCountRef.current = 0
-      if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null }
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
+      }
       setShowAdminLogin(true)
       return
     }
+
+    // Normal logo click behavior: go home
     goHome()
   }, [goHome, setShowAdminLogin])
 
+  const handleNavClick = useCallback(
+    (key: NavKey) => {
+      setActiveNav(key)
+      if (key === 'home') {
+        goHome()
+      } else if (key === 'categories') {
+        setCurrentView('home')
+      } else if (key === 'movies') {
+        setCurrentView('home')
+      } else if (key === 'mylist') {
+        setCurrentView('home')
+      }
+    },
+    [goHome, setCurrentView]
+  )
+
+  const handleMobileNavClick = useCallback(
+    (key: string) => {
+      if (key === 'home') {
+        setActiveNav('home')
+        goHome()
+      } else if (key === 'search') {
+        setMobileSearchOpen((prev) => !prev)
+      } else if (key === 'categories') {
+        setActiveNav('categories')
+        setCurrentView('home')
+      } else if (key === 'profile') {
+        // Profile action placeholder
+      }
+    },
+    [goHome, setCurrentView]
+  )
+
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/95 backdrop-blur-xl shadow-md border-b border-gray-100'
-          : 'bg-white/80 backdrop-blur-md border-b border-gray-100'
-      } h-16`}
-    >
-      <div className="flex items-center justify-between px-4 sm:px-6 md:px-10 h-full max-w-[1400px] mx-auto gap-3">
+    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-gray-100 h-16">
+      <div className="flex items-center justify-between px-4 md:px-8 h-full max-w-[2400px] mx-auto gap-4">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 group cursor-pointer select-none"
+            aria-label="Xtube Home"
+          >
+            <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff2d2d]/20">
+              X
+            </div>
+            <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">
+              tube
+            </span>
+          </button>
+        </div>
 
-        {/* ── Logo ─────────────────────────────────────────────────── */}
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center gap-1.5 group cursor-pointer select-none flex-shrink-0"
-          aria-label="Xtube Home"
-        >
-          <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-black text-white italic text-lg shadow-lg shadow-[#ff2d2d]/30 group-hover:brightness-110 transition-all">
-            X
-          </div>
-          <span className="text-xl font-black text-gray-900 tracking-tight hidden sm:block">
-            tube
-          </span>
-        </button>
-
-        {/* ── Desktop Search ────────────────────────────────────────── */}
-        <div className="flex-1 max-w-xl hidden md:block">
+        {/* Center: Search Bar */}
+        <div className="flex-1 max-w-2xl hidden md:block">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#ff2d2d] transition-colors" />
             <input
               type="text"
-              placeholder="Search Xtube..."
+              placeholder="Search content..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 rounded-full pl-11 pr-4 py-2.5 text-gray-900 text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#ff2d2d]/20 transition-all outline-none border border-transparent focus:border-[#ff2d2d]/20"
+              className="w-full bg-gray-100 border-none rounded-full pl-11 pr-4 py-2.5 text-gray-900 text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#ff2d2d]/20 transition-all outline-none"
             />
           </div>
         </div>
 
-        {/* ── Right Actions ─────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* Mobile search toggle */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1.5 md:gap-4">
           <button
-            onClick={() => setMobileSearchOpen((v) => !v)}
-            className="md:hidden p-2 rounded-full text-gray-500 hover:text-[#ff2d2d] hover:bg-[#ff2d2d]/10 transition-all"
-            aria-label="Search"
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="md:hidden p-2 text-gray-400 hover:text-gray-900 transition-colors"
           >
-            {mobileSearchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+            <Search className="w-5 h-5" />
           </button>
-
-          {/* Dashboard / Admin button */}
-          <button
+          
+          <button 
             onClick={() => useAppStore.getState().setShowAdminLogin(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[#ff2d2d]/10 text-[#ff2d2d] font-bold rounded-full text-xs sm:text-sm hover:bg-[#ff2d2d]/20 transition-all"
+            className="flex items-center gap-2 px-3 md:px-5 py-2 bg-[#ff2d2d]/10 text-[#ff2d2d] font-bold rounded-full text-xs md:text-sm hover:bg-[#ff2d2d]/20 transition-all"
           >
-            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="hidden sm:inline whitespace-nowrap">Dashboard</span>
+            <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
 
-          {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-[#ff2d2d]/10 border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-[#ff2d2d]" />
+          <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+            <User className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
           </div>
         </div>
       </div>
 
-      {/* ── Mobile Search Dropdown ────────────────────────────────── */}
+      {/* Mobile Search Dropdown */}
       {mobileSearchOpen && (
-        <div className="md:hidden px-4 pb-3 pt-1 bg-white border-b border-gray-100 shadow-lg animate-in slide-in-from-top-2 duration-200">
+        <div className="md:hidden px-4 pb-4 bg-white border-b border-gray-100 animate-in slide-in-from-top duration-200">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search Xtube..."
+              placeholder="Search..."
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl pl-11 pr-4 py-3 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-[#ff2d2d]/20 outline-none transition-all"
+              className="w-full bg-gray-100 border-none rounded-xl pl-11 pr-4 py-3 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-[#ff2d2d]/20 outline-none"
             />
           </div>
         </div>
