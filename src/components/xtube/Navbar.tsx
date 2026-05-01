@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/store/useAppStore'
-import { Search, Bell, Home, Grid3X3, User, Play } from 'lucide-react'
+import { Search, Bell, Home, Grid3X3, User, Play, Cast } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 const NAV_ITEMS = [
