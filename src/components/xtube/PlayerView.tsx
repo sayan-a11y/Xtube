@@ -12,6 +12,7 @@ import {
   Minimize,
   ChevronLeft,
   ThumbsUp,
+  ThumbsDown,
   Share2,
   Clock,
   Eye,
@@ -19,6 +20,10 @@ import {
   SkipForward,
   Loader2,
   MoreVertical,
+  Cast,
+  Subtitles,
+  MessageSquare,
+  CheckCircle2,
 } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -108,6 +113,8 @@ export default function PlayerView() {
   const [showSeekOverlay, setShowSeekOverlay] = useState<'left' | 'right' | null>(null)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
+  const [showComments, setShowComments] = useState(true)
+  const [commentInput, setCommentInput] = useState('')
 
   // Destructure for convenience
   const { video, loading, error, isPlaying, currentTime, duration, isBuffering, buffered, liked, likeCount, showCountdown, countdown } = playerState
@@ -863,9 +870,10 @@ export default function PlayerView() {
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-6">
-                      <Settings className="w-6 h-6 text-white cursor-pointer hover:rotate-45 transition-transform" onClick={() => setShowQualityMenu(!showQualityMenu)} />
-                      <Maximize className="w-6 h-6 text-white cursor-pointer" onClick={toggleFullscreen} />
+                    <div className="flex items-center gap-4 sm:gap-6">
+                      <Subtitles className="w-5 h-5 text-white/80 cursor-pointer hover:text-white hidden sm:block" />
+                      <Settings className="w-5 h-5 text-white/80 cursor-pointer hover:rotate-45 transition-transform" onClick={() => setShowQualityMenu(!showQualityMenu)} />
+                      <Maximize className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={toggleFullscreen} />
                     </div>
                   </div>
                 </div>
@@ -874,6 +882,13 @@ export default function PlayerView() {
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
             <div className="mt-4 px-4 lg:px-0">
+              <div className="flex flex-wrap gap-2 mb-1">
+                {['#xtube', '#streaming', '#viral'].map(tag => (
+                  <span key={tag} className="text-[#3ea6ff] text-[12px] font-medium hover:underline cursor-pointer">
+                    {tag}
+                  </span>
+                ))}
+              </div>
               <h1 className="text-xl font-bold text-white line-clamp-2">
                 {video.title}
               </h1>
@@ -897,21 +912,28 @@ export default function PlayerView() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center bg-white/10 rounded-full overflow-hidden">
-                    <button className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/10">
-                      <ThumbsUp className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  <div className="flex items-center bg-white/10 rounded-full overflow-hidden flex-shrink-0">
+                    <button 
+                      onClick={handleLike}
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/5"
+                    >
+                      <ThumbsUp className={`w-5 h-5 ${liked ? 'fill-[#ff2d2d] text-[#ff2d2d]' : 'text-white'}`} />
                       <span className="text-sm font-medium text-white">{likeCount.toLocaleString()}</span>
                     </button>
-                    <button className="px-4 py-2 hover:bg-white/10 transition-colors">
-                      <ThumbsUp className="w-5 h-5 text-white rotate-180" />
+                    <button className="px-4 py-2 hover:bg-white/10 transition-colors group">
+                      <ThumbsDown className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                     </button>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white flex-shrink-0">
                     <Share2 className="w-5 h-5" />
                     <span className="text-sm font-medium">Share</span>
                   </button>
-                  <button className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white flex-shrink-0">
+                    <Clock className="w-5 h-5" />
+                    <span className="text-sm font-medium">Save</span>
+                  </button>
+                  <button className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white flex-shrink-0">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -929,6 +951,68 @@ export default function PlayerView() {
                 <button className="text-white text-sm font-semibold mt-1">
                   {descriptionExpanded ? 'Show less' : '...more'}
                 </button>
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-6 px-4 lg:px-0">
+                <div className="flex items-center gap-6 mb-6">
+                  <h3 className="text-lg font-bold text-white">Comments</h3>
+                  <span className="text-[#aaaaaa] font-medium text-sm">2,483</span>
+                </div>
+
+                {/* Comment Input */}
+                <div className="flex gap-4 mb-8">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff2d2d] to-[#ff3c1a] flex items-center justify-center font-bold text-white shadow-lg flex-shrink-0">
+                    S
+                  </div>
+                  <div className="flex-1">
+                    <input 
+                      type="text"
+                      placeholder="Add a comment..."
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      className="w-full bg-transparent border-b border-white/20 pb-2 text-sm text-white focus:outline-none focus:border-white transition-all placeholder:text-[#aaaaaa]"
+                    />
+                    {commentInput && (
+                      <div className="flex justify-end gap-3 mt-3">
+                        <button onClick={() => setCommentInput('')} className="px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 rounded-full">Cancel</button>
+                        <button className="px-4 py-2 text-sm font-semibold text-black bg-[#3ea6ff] rounded-full">Comment</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Placeholder Comments */}
+                <div className="space-y-6">
+                  {[
+                    { user: 'Sayan Ghosh', initial: 'S', text: 'This video is amazing! The quality and editing are top-notch. 🔥', time: '2 hours ago', likes: '1.2K' },
+                    { user: 'Web Dev Pro', initial: 'W', text: 'Great explanation. Really helped me understand the concepts. Looking forward to more!', time: '5 hours ago', likes: '432' },
+                    { user: 'Xtube Fan', initial: 'X', text: 'The new UI looks so clean. Love the dark theme!', time: '1 day ago', likes: '89' },
+                  ].map((comment, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-medium text-white text-sm flex-shrink-0">
+                        {comment.initial}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[13px] font-bold text-white">{comment.user}</span>
+                          <span className="text-[12px] text-[#aaaaaa]">{comment.time}</span>
+                        </div>
+                        <p className="text-sm text-white leading-relaxed mb-2">{comment.text}</p>
+                        <div className="flex items-center gap-4">
+                          <button className="flex items-center gap-1.5 text-white hover:text-[#aaaaaa]">
+                            <ThumbsUp className="w-4 h-4" />
+                            <span className="text-xs">{comment.likes}</span>
+                          </button>
+                          <button className="text-white hover:text-[#aaaaaa]">
+                            <ThumbsDown className="w-4 h-4" />
+                          </button>
+                          <button className="text-xs font-bold text-white hover:bg-white/10 px-3 py-1 rounded-full">Reply</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

@@ -120,24 +120,28 @@ export default function Navbar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1 md:gap-2">
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
             className="md:hidden p-2 text-white hover:bg-white/10 rounded-full transition-colors"
           >
-            <Search className="w-6 h-6" />
+            <Search className="w-5 h-5" />
           </button>
           
           <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:block">
-            <Bell className="w-6 h-6" />
+            <Cast className="w-5 h-5" />
+          </button>
+
+          <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:block">
+            <Bell className="w-5 h-5" />
           </button>
 
           <button 
             onClick={() => useAppStore.getState().setShowAdminLogin(true)}
-            className="flex items-center gap-2 px-3 md:px-4 py-1.5 bg-white/10 text-white font-medium rounded-full text-xs md:text-sm hover:bg-white/20 transition-all border border-white/10"
+            className="flex items-center gap-2 px-3 md:px-4 py-1.5 ml-2 bg-white/10 text-white font-medium rounded-full text-xs md:text-sm hover:bg-white/20 transition-all border border-white/10"
           >
             <User className="w-4 h-4" />
-            <span className="hidden sm:inline">Dashboard</span>
+            <span className="hidden sm:inline">Sign in</span>
           </button>
         </div>
       </div>
