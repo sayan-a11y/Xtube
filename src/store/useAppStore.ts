@@ -14,6 +14,7 @@ export interface VideoData {
   views: number
   likes: number
   size: number
+  status: string
   createdAt: string
   updatedAt: string
 }

@@ -69,7 +69,14 @@ export async function POST(request: NextRequest) {
         hlsPath: '',
         duration: '0:00',
         size: buffer.length,
+        status: 'processing'
       },
+    })
+
+    // 4. Trigger HLS Processing (Background)
+    // We don't await this so the API returns quickly
+    import('@/lib/hls-processor').then(({ processVideoHLS }) => {
+      processVideoHLS(videoId, buffer).catch(console.error)
     })
 
     try { await rm(tempDir, { recursive: true, force: true }) } catch {}

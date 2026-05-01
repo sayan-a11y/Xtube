@@ -576,6 +576,12 @@ function VideosTab() {
               <div className="flex flex-wrap gap-2 mb-4">
                  <span className="px-2 py-0.5 rounded-lg bg-[#ff2d2d]/10 text-[#ff2d2d] text-[10px] font-black">{video.category}</span>
                  <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black">{formatBytes(video.size)}</span>
+                 {video.status === 'processing' && (
+                   <span className="px-2 py-0.5 rounded-lg bg-yellow-500/10 text-yellow-500 text-[10px] font-black animate-pulse">Processing...</span>
+                 )}
+                 {video.status === 'failed' && (
+                   <span className="px-2 py-0.5 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-black">Failed</span>
+                 )}
               </div>
 
               <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
