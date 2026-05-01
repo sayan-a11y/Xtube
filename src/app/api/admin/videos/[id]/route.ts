@@ -47,37 +47,25 @@ export async function DELETE(
       return url.split('/').pop() || ''
     }
 
-    // Delete video file from R2
+    // 1. Delete original video file
     if (video.filePath) {
       try {
-        if (video.filePath.includes('http')) {
-          await deleteFromR2(extractKey(video.filePath))
-        }
+        const key = extractKey(video.filePath)
+        await deleteFromR2(key)
+        console.log('Deleted original file:', key)
       } catch (e) {
-        console.error('Failed to delete video from R2:', e)
+        console.error('Failed to delete original file:', e)
       }
     }
 
-    // Delete thumbnail from R2
-    if (video.thumbnail) {
-      try {
-        if (video.thumbnail.includes('http')) {
-          await deleteFromR2(extractKey(video.thumbnail))
-        }
-      } catch (e) {
-        console.error('Failed to delete thumbnail from R2:', e)
-      }
-    }
-
-    // Delete HLS folder from R2
-    if (video.hlsPath) {
-      try {
-        if (video.hlsPath.includes('http')) {
-          await deletePrefixFromR2(`hls/${id}/`)
-        }
-      } catch (e) {
-        console.error('Failed to delete HLS prefix from R2:', e)
-      }
+    // 2. Delete all assets in the video's dedicated folder (HLS, thumbnails, sprites)
+    try {
+      // Everything related to the video is stored under videos/[id]/
+      const folderPrefix = `videos/${id}/`
+      await deletePrefixFromR2(folderPrefix)
+      console.log('Deleted video assets folder:', folderPrefix)
+    } catch (e) {
+      console.error('Failed to delete video assets folder:', e)
     }
 
     // Delete from database
