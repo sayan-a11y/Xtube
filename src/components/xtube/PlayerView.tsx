@@ -115,6 +115,8 @@ export default function PlayerView() {
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
   const [showComments, setShowComments] = useState(true)
   const [commentInput, setCommentInput] = useState('')
+  const [ccEnabled, setCcEnabled] = useState(false)
+  const [showCcToast, setShowCcToast] = useState(false)
 
   // Destructure for convenience
   const { video, loading, error, isPlaying, currentTime, duration, isBuffering, buffered, liked, likeCount, showCountdown, countdown } = playerState
@@ -872,18 +874,28 @@ export default function PlayerView() {
                     
                     <div className="flex items-center gap-2 sm:gap-4">
                       <button 
-                        className="p-2 text-white/80 hover:text-white transition-colors relative group"
+                        className={`p-2 transition-colors relative group ${ccEnabled ? 'text-[#ff2d2d]' : 'text-white/80 hover:text-white'}`}
                         onClick={() => {
-                          // Simple toggle for demo
-                          const msg = document.createElement('div')
-                          msg.className = "absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] px-2 py-1 rounded font-bold whitespace-nowrap"
-                          msg.innerText = "CC TOGGLED"
-                          event?.currentTarget.appendChild(msg)
-                          setTimeout(() => msg.remove(), 1000)
+                          setCcEnabled(!ccEnabled)
+                          setShowCcToast(true)
+                          setTimeout(() => setShowCcToast(false), 2000)
                         }}
                       >
                         <Subtitles className="w-5 h-5" />
-                        <div className="absolute -top-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap -translate-y-full">Subtitles (c)</div>
+                        {ccEnabled && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-0.5 bg-[#ff2d2d] rounded-full" />}
+                        <AnimatePresence>
+                          {showCcToast && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] px-2 py-1 rounded font-bold whitespace-nowrap shadow-xl"
+                            >
+                              {ccEnabled ? 'CC ON' : 'CC OFF'}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <div className="absolute -top-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap -translate-y-full pointer-events-none">Subtitles (c)</div>
                       </button>
 
                       <div className="relative" ref={qualityMenuRef}>
