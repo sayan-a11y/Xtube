@@ -90,18 +90,18 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
-      className="group cursor-pointer"
+      className="group cursor-pointer flex flex-col gap-3"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {/* Thumbnail container */}
-      <div className="aspect-video relative rounded-2xl overflow-hidden bg-[#1a1a1a] shadow-lg transition-all duration-300 group-hover:rounded-none group-hover:scale-105 group-hover:shadow-2xl z-0 group-hover:z-10">
+      <div className="aspect-video relative rounded-2xl overflow-hidden bg-gray-200 shadow-sm transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl z-0 group-hover:z-10">
         {!imgError ? (
           <img
             src={video.thumbnail}
             alt={video.title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
               isPreviewPlaying ? 'opacity-0' : 'opacity-100'
             }`}
             loading="lazy"
@@ -111,7 +111,7 @@ export default function VideoCard({ video }: VideoCardProps) {
         ) : (
           <video
             src={`${video.filePath}#t=1`}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
               isPreviewPlaying ? 'opacity-0' : 'opacity-100'
             }`}
             muted
@@ -122,60 +122,50 @@ export default function VideoCard({ video }: VideoCardProps) {
 
         {/* Video preview layer */}
         {isPreviewPlaying && (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 z-20">
             <video
               ref={videoRef}
               src={video.filePath}
               className="w-full h-full object-cover"
               muted
               playsInline
+              loop
               onLoadedMetadata={handleLoadedMetadata}
-              preload="none"
             />
           </div>
         )}
 
         {/* Duration badge */}
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-md">
+        <div className="absolute bottom-2.5 right-2.5 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm z-30">
           {video.duration}
-        </div>
-
-        {/* Quality Badge (Optional Pro) */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="bg-[#ff0000] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">4K</span>
         </div>
       </div>
 
       {/* Info Section */}
-      <div className="flex gap-3 mt-3">
+      <div className="flex gap-4 px-1">
         {/* Avatar */}
-        <div className="flex-shrink-0 mt-1">
-          <div className="w-9 h-9 rounded-full bg-[#272727] flex items-center justify-center font-bold text-white text-xs border border-white/5">
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 text-sm border border-gray-100">
             {video.category[0].toUpperCase()}
           </div>
         </div>
 
         {/* Text details */}
-        <div className="flex-1 min-w-0 pr-4 relative">
-          <h3 className="text-[15px] font-bold text-white line-clamp-2 leading-tight mb-1 group-hover:text-[#ff0000] transition-colors">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[#6d9bc3] transition-colors mb-1">
             {video.title}
           </h3>
-          <div className="flex flex-col text-[13px] text-gray-400 font-medium">
-            <div className="flex items-center gap-1 hover:text-white transition-colors">
+          <div className="flex flex-col text-[13px] text-gray-500 font-bold">
+            <div className="flex items-center gap-1">
               <span>XTube Studio</span>
-              <CheckCircle2 className="w-3 h-3 text-gray-500 fill-gray-500" />
+              <CheckCircle2 className="w-3 h-3 text-[#6d9bc3]" />
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 text-gray-400">
               <span>{formatViews(video.views)}</span>
-              <span className="w-0.5 h-0.5 rounded-full bg-gray-500" />
-              <span>12 hours ago</span>
+              <span className="w-1 h-1 rounded-full bg-gray-200" />
+              <span>{new Date(video.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
-
-          {/* 3-dot menu */}
-          <button className="absolute -right-1 top-0 p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-white transition-all">
-            <MoreVertical className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </div>

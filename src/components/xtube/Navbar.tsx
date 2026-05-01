@@ -116,21 +116,19 @@ export default function Navbar() {
   )
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#0f0f0f] border-b border-white/5`}
-    >
-      <div className="flex items-center justify-between px-4 md:px-6 h-16 max-w-[2400px] mx-auto gap-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-gray-100 h-16">
+      <div className="flex items-center justify-between px-4 md:px-8 h-full max-w-[2400px] mx-auto gap-4">
         {/* Left: Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={handleLogoClick}
-            className="flex items-center gap-1 group cursor-pointer select-none"
+            className="flex items-center gap-2 group cursor-pointer select-none"
             aria-label="Xtube Home"
           >
-            <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff0000]/20">
+            <div className="w-8 h-8 bg-[#6d9bc3] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#6d9bc3]/20">
               X
             </div>
-            <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
+            <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">
               tube
             </span>
           </button>
@@ -139,49 +137,43 @@ export default function Navbar() {
         {/* Center: Search Bar */}
         <div className="flex-1 max-w-2xl hidden md:block">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#ff0000] transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#6d9bc3] transition-colors" />
             <input
               type="text"
-              placeholder="Search videos..."
+              placeholder="Search content..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#121212] border border-[#272727] rounded-full pl-11 pr-4 py-2.5 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#ff0000]/50 focus:bg-[#1a1a1a] transition-all"
+              className="w-full bg-gray-100 border-none rounded-full pl-11 pr-4 py-2.5 text-gray-900 text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#6d9bc3]/20 transition-all outline-none"
             />
           </div>
         </div>
 
-        {/* Right: Icons */}
-        <div className="flex items-center gap-1 sm:gap-3">
-          {/* Mobile Search Icon */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
+            className="md:hidden p-2 text-gray-400 hover:text-gray-900 transition-colors"
           >
             <Search className="w-5 h-5" />
           </button>
-
-          <button className="p-2 text-gray-300 hover:text-white transition-colors hidden sm:block">
-            <Play className="w-5 h-5 rotate-90" />
-          </button>
           
-          <button className="p-2 text-gray-300 hover:text-white transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ff0000] rounded-full" />
-          </button>
-
-          {/* Profile Avatar */}
-          <button
-            className="w-8 h-8 rounded-full bg-[#272727] border border-white/10 flex items-center justify-center text-white text-xs font-bold hover:border-[#ff0000]/50 transition-all ml-1"
-            aria-label="Profile"
+          <button 
+            onClick={() => useAppStore.getState().setShowAdminLogin(true)}
+            className="flex items-center gap-2 px-5 py-2 bg-[#6d9bc3]/10 text-[#6d9bc3] font-bold rounded-full text-sm hover:bg-[#6d9bc3]/20 transition-all"
           >
             <User className="w-4 h-4" />
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
+
+          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+            <User className="w-5 h-5 text-gray-400" />
+          </div>
         </div>
       </div>
 
       {/* Mobile Search Dropdown */}
       {mobileSearchOpen && (
-        <div className="md:hidden px-4 pb-4 bg-[#0f0f0f] border-b border-white/5 animate-in slide-in-from-top duration-200">
+        <div className="md:hidden px-4 pb-4 bg-white border-b border-gray-100 animate-in slide-in-from-top duration-200">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -190,7 +182,7 @@ export default function Navbar() {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#121212] border border-[#272727] rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none"
+              className="w-full bg-gray-100 border-none rounded-xl pl-11 pr-4 py-3 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-[#6d9bc3]/20 outline-none"
             />
           </div>
         </div>

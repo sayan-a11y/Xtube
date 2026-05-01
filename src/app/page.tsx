@@ -149,7 +149,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen bg-[#f3f4f6] text-[#1f2937]">
       <Navbar />
 
       {/* Admin Login Modal */}
@@ -206,15 +206,15 @@ export default function Home() {
         <PlayerView />
       ) : (
         <main className="pt-20 pb-10">
-          {/* Category Tabs (Fixed or sticky recommended) */}
-          <div className="sticky top-16 z-30 bg-[#0f0f0f]/95 backdrop-blur-md px-4 md:px-8 lg:px-12 py-3 border-b border-white/5 overflow-x-auto no-scrollbar">
+          {/* Category Tabs */}
+          <div className="sticky top-16 z-30 bg-[#f3f4f6]/80 backdrop-blur-md px-4 md:px-8 lg:px-12 py-3 border-b border-gray-200 overflow-x-auto no-scrollbar">
             <div className="max-w-[2000px] mx-auto flex items-center gap-3">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                   selectedCategory === 'All'
-                    ? 'bg-white text-black shadow-lg'
-                    : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+                    ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 All
@@ -223,15 +223,17 @@ export default function Home() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                     selectedCategory === cat
-                      ? 'bg-white text-black shadow-lg'
-                      : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+                      ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   {cat}
                 </button>
               ))}
+            </div>
+          </div>
               {categories.map((cat) => (
                 <button
                   key={cat.id}

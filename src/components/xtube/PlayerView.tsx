@@ -675,15 +675,15 @@ export default function PlayerView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pt-16 md:pt-20">
+    <div className="min-h-screen bg-[#f3f4f6] pt-16 md:pt-20">
       <div className="max-w-[2000px] mx-auto px-0 md:px-6 lg:px-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-10">
           {/* ── Main Content ──────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
             {/* ── Player Area ──────────────────────────────────────────────── */}
             <div
               ref={playerContainerRef}
-              className="relative w-full aspect-video bg-black rounded-xl overflow-hidden group cursor-none select-none"
+              className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden group cursor-none shadow-2xl"
               onMouseMove={resetControlsTimeout}
               onTouchStart={resetControlsTimeout}
               onMouseLeave={() => {
@@ -776,9 +776,9 @@ export default function PlayerView() {
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-20 h-20 rounded-full bg-[#ff0000]/90 flex items-center justify-center shadow-[0_0_50px_rgba(255,0,0,0.3)] backdrop-blur-sm"
+                    className="w-24 h-24 rounded-full border-2 border-white/80 flex items-center justify-center backdrop-blur-[2px] shadow-2xl"
                   >
-                    <Play className="w-9 h-9 text-white fill-white ml-1.5" />
+                    <Play className="w-10 h-10 text-white fill-white ml-2" />
                   </motion.div>
                 </div>
               )}
@@ -828,198 +828,39 @@ export default function PlayerView() {
                   </button>
                 </div>
 
-                {/* Bottom Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent p-4 pt-32 pointer-events-auto drop-shadow-2xl">
-                  {/* Seek Bar */}
+                {/* Bottom Controls - Solid Bar Style matching image */}
+                <div className="absolute bottom-0 left-0 right-0 bg-[#272727]/90 backdrop-blur-md px-6 py-4 pointer-events-auto border-t border-white/5">
+                  {/* Seek Bar (Integrated) */}
                   <div
                     ref={seekRef}
-                    className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer group/seek mb-3 hover:h-2.5 transition-all relative z-30 overflow-hidden"
+                    className="absolute top-0 left-0 right-0 h-1 bg-white/10 cursor-pointer group/seek"
                     onClick={handleSeekClick}
-                    role="slider"
-                    aria-label="Seek"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(seekProgress)}
-                    tabIndex={0}
                   >
-                    {/* Buffered */}
-                    <div
-                      className="absolute top-0 left-0 h-full bg-white/15 rounded-full pointer-events-none"
-                      style={{ width: `${buffered}%` }}
-                    />
-                    {/* Progress */}
-                    <div
-                      className="h-full bg-[#ff0000] rounded-full relative transition-none shadow-[0_0_15px_rgba(255,0,0,0.5)]"
-                      style={{ width: `${seekProgress}%` }}
-                    >
-                      {/* Thumb */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff0000] rounded-full shadow-[0_0_10px_rgba(255,0,0,0.8)] opacity-0 group-hover/seek:opacity-100 transition-opacity ring-2 ring-white/20" />
+                    <div className="h-full bg-[#6d9bc3] transition-none" style={{ width: `${seekProgress}%` }}>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover/seek:opacity-100 shadow-xl" />
                     </div>
                   </div>
 
-                  {/* Control Buttons Row */}
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Left controls */}
-                    <div className="flex items-center gap-2 md:gap-3">
-                      {/* Play/Pause */}
-                      <button
-                        onClick={togglePlay}
-                        className="text-white hover:text-[#ff2d2d] transition-colors p-1"
-                        aria-label={isPlaying ? 'Pause' : 'Play'}
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-6 h-6" />
-                        ) : (
-                          <Play className="w-6 h-6 fill-white" />
-                        )}
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-6">
+                      <button onClick={togglePlay} className="text-white hover:text-[#6d9bc3] transition-colors">
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
                       </button>
-
-                      {/* Skip forward */}
-                      <button
-                        onClick={() => {
-                          if (videoRef.current) {
-                            videoRef.current.currentTime = Math.min(
-                              videoRef.current.currentTime + 10,
-                              videoRef.current.duration
-                            )
-                          }
-                        }}
-                        className="text-white/80 hover:text-white transition-colors p-1 hidden sm:block"
-                        aria-label="Skip forward 10 seconds"
-                      >
-                        <SkipForward className="w-5 h-5" />
-                      </button>
-
-                      {/* Volume */}
-                      <div className="flex items-center gap-1 group/vol">
-                        <button
-                          onClick={toggleMute}
-                          className="text-white hover:text-[#ff2d2d] transition-colors p-1"
-                          aria-label={isMuted ? 'Unmute' : 'Mute'}
-                        >
-                          <VolumeIcon className="w-5 h-5" />
-                        </button>
-                        <div
-                          ref={volumeSliderRef}
-                          className="w-0 group-hover/vol:w-20 overflow-hidden transition-all duration-300 h-1.5 bg-white/20 rounded-full cursor-pointer relative"
-                          onClick={handleVolumeClick}
-                          role="slider"
-                          aria-label="Volume"
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={Math.round((isMuted ? 0 : volume) * 100)}
-                        >
-                          <div
-                            className="h-full bg-white rounded-full"
-                            style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Time */}
-                      <span className="text-white text-xs md:text-sm font-medium tabular-nums select-none">
+                      <SkipForward className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={() => handleSeek(10)} />
+                      <span className="text-white/90 text-sm font-medium tabular-nums">
                         {formatTime(currentTime)} / {formatTime(duration)}
                       </span>
                     </div>
-
-                    {/* Right controls */}
-                    <div className="flex items-center gap-2 md:gap-3">
-                      {/* Quality Selector */}
-                      <div className="relative" ref={qualityMenuRef}>
-                        <button
-                          onClick={() => setShowQualityMenu((prev) => !prev)}
-                          className="text-white/80 hover:text-white transition-colors p-1 flex items-center gap-1"
-                          aria-label="Quality settings"
-                          aria-expanded={showQualityMenu}
-                        >
-                          <Settings className="w-5 h-5" />
-                          <span className="text-xs font-medium hidden md:inline">
-                            {selectedQuality === 'auto' ? 'Auto' : selectedQuality + 'p'}
-                          </span>
-                        </button>
-
-                        {/* Quality Dropdown */}
-                        {showQualityMenu && (
-                          <div className="absolute bottom-full right-0 mb-2 w-40 bg-[#1a1f2e]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                            <div className="p-2 border-b border-white/10">
-                              <p className="text-xs text-gray-400 font-medium px-2">Quality</p>
-                            </div>
-                            <div className="p-1">
-                              {QUALITY_OPTIONS.map((opt) => (
-                                <button
-                                  key={opt.value}
-                                  onClick={() => {
-                                    setSelectedQuality(opt.value)
-                                    setShowQualityMenu(false)
-                                  }}
-                                  className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                                    selectedQuality === opt.value
-                                      ? 'text-[#ff2d2d] bg-[#ff2d2d]/10 font-medium'
-                                      : 'text-white/80 hover:bg-white/10 hover:text-white'
-                                  }`}
-                                >
-                                  {opt.label}
-                                  {selectedQuality === opt.value && (
-                                    <span className="float-right">●</span>
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                    
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-3 group/vol">
+                        <VolumeIcon className="w-5 h-5 text-white cursor-pointer" onClick={toggleMute} />
+                        <div className="w-0 group-hover:w-20 transition-all duration-300 h-1 bg-white/20 rounded-full overflow-hidden">
+                          <div className="h-full bg-white" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
+                        </div>
                       </div>
-
-                      {/* Fullscreen */}
-                      <button
-                        onClick={toggleFullscreen}
-                        className="text-white/80 hover:text-white transition-colors p-1"
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                      >
-                        {isFullscreen ? (
-                          <Minimize className="w-5 h-5" />
-                        ) : (
-                          <Maximize className="w-5 h-5" />
-                        )}
-                      </button>
-
-                      {/* Speed Selector */}
-                      <div className="relative" ref={speedMenuRef}>
-                        <button
-                          onClick={() => setShowSpeedMenu((prev) => !prev)}
-                          className="text-white/80 hover:text-white transition-colors p-1 flex items-center gap-1"
-                          aria-label="Playback speed"
-                          aria-expanded={showSpeedMenu}
-                        >
-                          <span className="text-xs font-bold">{playbackSpeed}x</span>
-                        </button>
-
-                        {/* Speed Dropdown */}
-                        {showSpeedMenu && (
-                          <div className="absolute bottom-full right-0 mb-2 w-32 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                            <div className="p-2 border-b border-white/10">
-                              <p className="text-[10px] text-gray-400 font-bold uppercase px-2">Speed</p>
-                            </div>
-                            <div className="p-1">
-                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                                <button
-                                  key={speed}
-                                  onClick={() => {
-                                    setPlaybackSpeed(speed)
-                                    setShowSpeedMenu(false)
-                                  }}
-                                  className={`w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                                    playbackSpeed === speed
-                                      ? 'text-[#ff0000] bg-[#ff0000]/10 font-bold'
-                                      : 'text-white/80 hover:bg-white/10 hover:text-white'
-                                  }`}
-                                >
-                                  {speed === 1 ? 'Normal' : `${speed}x`}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <Settings className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowQualityMenu(!showQualityMenu)} />
+                      <Maximize className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={toggleFullscreen} />
                     </div>
                   </div>
                 </div>
@@ -1027,88 +868,69 @@ export default function PlayerView() {
             </div>
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
-            <div className="mt-4 px-4 md:px-0">
-              {/* Title */}
-              <h1 className="text-lg md:text-xl xl:text-2xl font-bold text-white leading-tight">
+            <div className="mt-8 px-4 md:px-0">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
                 {video.title}
               </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-6 pb-6 border-b border-gray-200">
                 {/* Channel / Subscribe section */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#ff0000] flex items-center justify-center font-bold text-white text-lg">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-xl border-2 border-white shadow-sm">
                     {video.category[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold text-sm md:text-base">XTube Studio</h3>
-                    <p className="text-gray-400 text-xs">1.2M subscribers</p>
+                    <h3 className="text-gray-900 font-bold text-base">XTube Studio</h3>
+                    <p className="text-gray-500 text-sm">1.2M subscribers</p>
                   </div>
-                  <button className="ml-2 px-4 py-2 bg-white text-black font-semibold rounded-full text-sm hover:bg-gray-200 transition-colors">
+                  <button className="ml-4 px-8 py-2 bg-[#6d9bc3] text-white font-bold rounded-full text-sm hover:brightness-110 shadow-lg shadow-[#6d9bc3]/20 transition-all">
                     Subscribe
                   </button>
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-                  {/* Like Button */}
-                  <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
-                    <button
-                      onClick={handleLike}
-                      className={`flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/10 ${
-                        liked ? 'text-[#ff0000]' : 'text-white'
-                      }`}
-                    >
-                      <ThumbsUp className={`w-5 h-5 ${liked ? 'fill-[#ff0000]' : ''}`} />
-                      <span className="text-sm font-medium">{likeCount.toLocaleString()}</span>
-                    </button>
-                    <button className="px-4 py-2 hover:bg-white/10 transition-colors text-white">
-                      <ThumbsUp className="w-5 h-5 rotate-180" />
-                    </button>
-                  </div>
-
-                  {/* Share Button */}
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2 bg-[#272727] text-white hover:bg-white/10 transition-colors px-4 py-2 rounded-full"
-                  >
-                    <Share2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">Share</span>
+                {/* Action buttons - Pill Style from image */}
+                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
+                    <ThumbsUp className="w-4 h-4" />
+                    <span>{likeCount.toLocaleString()}</span>
                   </button>
-
-                  {/* Save/Download Button */}
-                  <button className="flex items-center gap-2 bg-[#272727] text-white hover:bg-white/10 transition-colors px-4 py-2 rounded-full">
-                    <Clock className="w-5 h-5" />
-                    <span className="text-sm font-medium">Save</span>
+                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </button>
+                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>Save</span>
                   </button>
                 </div>
               </div>
 
               {/* Description Box */}
-              <div className="mt-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 hover:bg-[#222222] transition-all cursor-pointer group shadow-lg" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
-                <div className="flex items-center gap-3 text-white font-bold text-sm mb-2">
-                  <span className="bg-white/10 px-2 py-0.5 rounded">{formatViews(video.views)}</span>
+              <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md transition-all cursor-pointer group" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
+                <div className="flex items-center gap-3 text-gray-900 font-bold text-sm mb-3">
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">{formatViews(video.views)}</span>
                   <span className="text-gray-400">{formatDate(video.createdAt)}</span>
                 </div>
-                <div className={`text-gray-200 text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
+                <div className={`text-gray-600 text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
                   {video.description || "No description available for this video."}
                 </div>
-                <button className="text-[#ff0000] text-xs font-black uppercase tracking-widest mt-2 hover:brightness-125 transition-all">
-                  {descriptionExpanded ? 'Show less' : 'Read more'}
+                <button className="text-[#6d9bc3] text-sm font-bold mt-4 hover:underline">
+                  {descriptionExpanded ? 'Show less' : 'Show more'}
                 </button>
               </div>
             </div>
           </div>
 
           {/* ── Right Sidebar ──────────────────────────────────────────────── */}
-          <div className="w-full mt-6 lg:mt-0 px-4 md:px-0">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold text-lg">Recommended</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-xs">Autoplay</span>
+          <div className="w-full mt-10 lg:mt-0 px-4 md:px-0">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-gray-900 font-bold text-lg">Recommended</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-gray-500 text-xs font-medium">Autoplay</span>
                 <Switch
                   checked={autoplay}
                   onCheckedChange={setAutoplay}
-                  className="data-[state=checked]:bg-[#ff0000]"
+                  className="data-[state=checked]:bg-[#6d9bc3]"
                 />
               </div>
             </div>
@@ -1145,10 +967,10 @@ interface RelatedVideoItemProps {
 function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) {
   return (
     <div
-      className={`flex gap-3 p-1.5 rounded-xl cursor-pointer transition-all duration-300 ${
+      className={`flex gap-4 p-2 rounded-2xl cursor-pointer transition-all duration-300 ${
         isCurrent
-          ? 'bg-[#ff0000]/10 ring-1 ring-[#ff0000]/30'
-          : 'hover:bg-[#272727]'
+          ? 'bg-white shadow-lg border border-gray-100 ring-2 ring-[#6d9bc3]/20'
+          : 'hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100'
       }`}
       onClick={onClick}
       role="button"
@@ -1156,36 +978,36 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
       aria-label={`Play ${video.title}`}
     >
       {/* Thumbnail */}
-      <div className="relative w-40 md:w-32 xl:w-40 flex-shrink-0 aspect-video rounded-xl overflow-hidden bg-[#1a1a1a]">
+      <div className="relative w-40 md:w-32 xl:w-44 flex-shrink-0 aspect-video rounded-xl overflow-hidden bg-gray-200 shadow-sm">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
           loading="lazy"
           draggable={false}
         />
-        <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
           {video.duration}
         </div>
         {isCurrent && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-            <div className="w-8 h-8 rounded-full bg-[#ff0000] flex items-center justify-center shadow-lg shadow-[#ff0000]/40">
-              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+          <div className="absolute inset-0 flex items-center justify-center bg-[#6d9bc3]/20 backdrop-blur-[1px]">
+            <div className="w-10 h-10 rounded-full bg-[#6d9bc3] flex items-center justify-center shadow-xl">
+              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
             </div>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 py-0.5">
-        <h4 className="text-sm font-semibold text-white line-clamp-2 leading-tight group-hover:text-[#ff0000] transition-colors">
+      <div className="flex-1 min-w-0 py-1">
+        <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#6d9bc3] transition-colors">
           {video.title}
         </h4>
-        <div className="mt-1 space-y-0.5">
-          <p className="text-xs text-gray-400 font-medium truncate">XTube Studio</p>
-          <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+        <div className="mt-2 space-y-1">
+          <p className="text-xs text-gray-500 font-bold">XTube Studio</p>
+          <div className="flex items-center gap-2 text-[11px] text-gray-400 font-semibold">
             <span>{formatViews(video.views)}</span>
-            <span>•</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300" />
             <span>{formatDate(video.createdAt)}</span>
           </div>
         </div>
