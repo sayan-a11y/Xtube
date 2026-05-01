@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.title = { contains: search }
+      where.title = { contains: search, mode: 'insensitive' }
     }
 
     let orderBy: any = { createdAt: 'desc' }

@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
-import { unlink, rm } from 'fs/promises'
-import { join } from 'path'
+import { deleteFromR2, deletePrefixFromR2 } from '@/lib/r2'
 
 export async function PUT(
   request: NextRequest,
@@ -40,32 +39,44 @@ export async function DELETE(
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
 
-    // Delete video file
+    // Extract keys from URLs
+    const extractKey = (url: string) => {
+      if (url.includes('.r2.dev/')) {
+        return url.split('.r2.dev/')[1]
+      }
+      return url.split('/').pop() || ''
+    }
+
+    // Delete video file from R2
     if (video.filePath) {
-      const fileName = video.filePath.split('/').pop()
       try {
-        await unlink(join(process.cwd(), 'public', 'storage', 'videos', fileName || ''))
+        if (video.filePath.includes('http')) {
+          await deleteFromR2(extractKey(video.filePath))
+        }
       } catch (e) {
-        console.error('Failed to delete video file:', e)
+        console.error('Failed to delete video from R2:', e)
       }
     }
 
-    // Delete thumbnail
+    // Delete thumbnail from R2
     if (video.thumbnail) {
-      const thumbName = video.thumbnail.split('/').pop()
       try {
-        await unlink(join(process.cwd(), 'public', 'storage', 'thumbnails', thumbName || ''))
+        if (video.thumbnail.includes('http')) {
+          await deleteFromR2(extractKey(video.thumbnail))
+        }
       } catch (e) {
-        console.error('Failed to delete thumbnail:', e)
+        console.error('Failed to delete thumbnail from R2:', e)
       }
     }
 
-    // Delete HLS folder
+    // Delete HLS folder from R2
     if (video.hlsPath) {
       try {
-        await rm(join(process.cwd(), 'public', 'storage', 'hls', id), { recursive: true, force: true })
+        if (video.hlsPath.includes('http')) {
+          await deletePrefixFromR2(`hls/${id}/`)
+        }
       } catch (e) {
-        console.error('Failed to delete HLS folder:', e)
+        console.error('Failed to delete HLS prefix from R2:', e)
       }
     }
 
@@ -78,3 +89,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 })
   }
 }
+

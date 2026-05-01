@@ -1,7 +1,5 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { readdirSync, statSync } from 'fs'
-import { join } from 'path'
 
 export async function GET() {
   try {
@@ -18,18 +16,11 @@ export async function GET() {
     })
     const totalLikes = likesResult._sum.likes || 0
 
-    // Calculate storage usage
-    let storageUsed = 0
-    try {
-      const videosDir = join(process.cwd(), 'public', 'storage', 'videos')
-      const files = readdirSync(videosDir)
-      for (const file of files) {
-        try {
-          const stats = statSync(join(videosDir, file))
-          storageUsed += stats.size
-        } catch {}
-      }
-    } catch {}
+    // Calculate storage usage from database
+    const sizeResult = await db.video.aggregate({
+      _sum: { size: true },
+    })
+    const storageUsed = sizeResult._sum.size || 0
 
     const recentVideos = await db.video.findMany({
       orderBy: { createdAt: 'desc' },
