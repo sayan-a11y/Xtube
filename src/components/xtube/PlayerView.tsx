@@ -536,21 +536,21 @@ export default function PlayerView() {
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Player skeleton */}
             <div className="flex-1">
-              <Skeleton className="w-full aspect-video rounded-xl bg-white/5" />
+              <Skeleton className="w-full aspect-video rounded-xl bg-white/[0.02]" />
               <div className="mt-4 space-y-3">
-                <Skeleton className="h-8 w-3/4 rounded-lg bg-white/5" />
-                <Skeleton className="h-5 w-1/2 rounded-lg bg-white/5" />
-                <Skeleton className="h-16 w-full rounded-lg bg-white/5" />
+                <Skeleton className="h-8 w-3/4 rounded-lg bg-white/[0.02]" />
+                <Skeleton className="h-5 w-1/2 rounded-lg bg-white/[0.02]" />
+                <Skeleton className="h-16 w-full rounded-lg bg-white/[0.02]" />
               </div>
             </div>
             {/* Sidebar skeleton */}
             <div className="w-full lg:w-96 space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex gap-3 p-2">
-                  <Skeleton className="w-40 h-[90px] rounded-lg bg-white/5" />
+                  <Skeleton className="w-40 h-[90px] rounded-lg bg-white/[0.02]" />
                   <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full rounded bg-white/5" />
-                    <Skeleton className="h-3 w-2/3 rounded bg-white/5" />
+                    <Skeleton className="h-4 w-full rounded bg-white/[0.02]" />
+                    <Skeleton className="h-3 w-2/3 rounded bg-white/[0.02]" />
                   </div>
                 </div>
               ))}
@@ -669,11 +669,11 @@ export default function PlayerView() {
                 </div>
 
                 {/* Bottom Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12 pointer-events-auto">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent p-4 pt-32 pointer-events-auto drop-shadow-2xl">
                   {/* Seek Bar */}
                   <div
                     ref={seekRef}
-                    className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer group/seek mb-3 hover:h-2.5 transition-all"
+                    className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer group/seek mb-3 hover:h-2.5 transition-all"
                     onClick={handleSeekClick}
                     role="slider"
                     aria-label="Seek"
@@ -684,7 +684,7 @@ export default function PlayerView() {
                   >
                     {/* Buffered */}
                     <div
-                      className="absolute top-0 left-0 h-full bg-white/30 rounded-full pointer-events-none"
+                      className="absolute top-0 left-0 h-full bg-white/15 rounded-full pointer-events-none"
                       style={{ width: `${buffered}%` }}
                     />
                     {/* Progress */}
