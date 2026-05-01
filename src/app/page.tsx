@@ -232,16 +232,14 @@ export default function Home() {
                   {cat}
                 </button>
               ))}
-            </div>
-          </div>
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                     selectedCategory === cat.name
-                      ? 'bg-white text-black shadow-lg'
-                      : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+                      ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   {cat.name}
@@ -256,12 +254,12 @@ export default function Home() {
               {videosLoading ? (
                 Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="space-y-3">
-                    <Skeleton className="aspect-video w-full rounded-2xl bg-[#272727]" />
+                    <Skeleton className="aspect-video w-full rounded-2xl bg-gray-200" />
                     <div className="flex gap-3">
-                      <Skeleton className="w-10 h-10 rounded-full bg-[#272727] flex-shrink-0" />
+                      <Skeleton className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-full bg-[#272727]" />
-                        <Skeleton className="h-3 w-2/3 bg-[#272727]" />
+                        <Skeleton className="h-4 w-full bg-gray-200" />
+                        <Skeleton className="h-3 w-2/3 bg-gray-200" />
                       </div>
                     </div>
                   </div>
@@ -272,29 +270,29 @@ export default function Home() {
                 ))
               ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
-                  <Film className="w-20 h-20 mb-4" />
-                  <h3 className="text-xl font-bold">No Videos Found</h3>
-                  <p className="text-sm">Try another category or search term.</p>
+                  <Film className="w-20 h-20 mb-4 text-gray-400" />
+                  <h3 className="text-xl font-bold text-gray-600">No Videos Found</h3>
+                  <p className="text-sm text-gray-400">Try another category or search term.</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Footer */}
-          <footer className="mt-20 border-t border-white/5 px-4 md:px-12 py-12">
+          <footer className="mt-20 border-t border-gray-200 px-4 md:px-12 py-12 bg-white">
             <div className="max-w-[2000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
-                <span className="text-xl font-bold text-white tracking-tight">tube</span>
+                <div className="w-8 h-8 bg-[#6d9bc3] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
+                <span className="text-xl font-bold text-gray-900 tracking-tight">tube</span>
               </div>
               <div className="flex items-center gap-8 text-gray-500 text-sm font-medium">
-                <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
-                <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
-                <span className="hover:text-white cursor-pointer transition-colors">Contact</span>
-                <span className="hover:text-white cursor-pointer transition-colors">Advertise</span>
+                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Privacy</span>
+                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Terms</span>
+                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Contact</span>
+                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Advertise</span>
               </div>
-              <p className="text-gray-600 text-xs">
-                © 2024 Xtube Platform. All rights reserved.
+              <p className="text-gray-400 text-xs">
+                © 2026 Xtube Platform. All rights reserved.
               </p>
             </div>
           </footer>
