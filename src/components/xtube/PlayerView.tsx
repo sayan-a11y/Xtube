@@ -131,6 +131,7 @@ export default function PlayerView() {
   const qualityMenuRef = useRef<HTMLDivElement>(null)
   const speedMenuRef = useRef<HTMLDivElement>(null)
   const lastTapTimeRef = useRef<number>(0)
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Related Videos ───────────────────────────────────────────────────────
   const relatedVideos = useMemo(() => {
@@ -413,6 +414,11 @@ export default function PlayerView() {
   }, [resetControlsTimeout])
 
   const handleVideoClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Only handle touch events if requested (or both for better UX, but sticking to request)
+    const isTouch = e.type.startsWith('touch') || (window.matchMedia("(pointer: coarse)").matches)
+    
+    if (!isTouch && e.type.startsWith('touch')) return // safeguard
+
     const now = Date.now()
     const DOUBLE_TAP_DELAY = 300
     const timeDiff = now - lastTapTimeRef.current
@@ -421,7 +427,12 @@ export default function PlayerView() {
     resetControlsTimeout()
 
     if (timeDiff < DOUBLE_TAP_DELAY) {
-      // Double tap detected
+      // Double tap detected: Clear single tap timeout
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current)
+        tapTimeoutRef.current = null
+      }
+
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
       let clientX = 0
       if ('clientX' in e) {
@@ -438,14 +449,20 @@ export default function PlayerView() {
       }
       lastTapTimeRef.current = 0 
     } else {
-      // Single tap
+      // Single tap: Wait to see if it's a double tap
       lastTapTimeRef.current = now
-      // On mobile, first tap shows controls, second tap (if controls visible) toggles play
-      if (!showControls) {
-        setShowControls(true)
-      } else {
-        togglePlay()
-      }
+      
+      if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current)
+      
+      tapTimeoutRef.current = setTimeout(() => {
+        // Perform single tap action
+        if (!showControls) {
+          setShowControls(true)
+        } else {
+          togglePlay()
+        }
+        tapTimeoutRef.current = null
+      }, DOUBLE_TAP_DELAY)
     }
   }
 
@@ -742,16 +759,17 @@ export default function PlayerView() {
                     }`}
                   >
                     <div
-                      className={`h-full w-1/3 bg-transparent flex flex-col items-center justify-center gap-2 ${
+                      className={`h-full w-1/2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${
                         showSeekOverlay === 'left'
-                          ? 'rounded-r-full'
-                          : 'rounded-l-full'
+                          ? 'bg-gradient-to-r from-white/20 to-transparent rounded-r-full'
+                          : 'bg-gradient-to-l from-white/20 to-transparent rounded-l-full'
                       }`}
                     >
-                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 shadow-xl">
-                        <span className="text-white font-black text-xl tracking-tighter">
-                          {showSeekOverlay === 'left' ? '-10s' : '+10s'}
-                        </span>
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="text-white font-black text-2xl mb-1 flex items-center gap-2">
+                           {showSeekOverlay === 'left' ? '⏪' : '⏩'}
+                           <span>10s</span>
+                        </div>
                       </div>
                       <div className="flex gap-1.5">
                         {[0, 1, 2].map((i) => (
