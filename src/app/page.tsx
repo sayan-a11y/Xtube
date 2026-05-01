@@ -6,8 +6,10 @@ import HeroSection from '@/components/xtube/HeroSection'
 import ContentRow from '@/components/xtube/ContentRow'
 import PlayerView from '@/components/xtube/PlayerView'
 import AdminPanel from '@/components/xtube/AdminPanel'
-import { Flame, Clock, Star, TrendingUp, Film } from 'lucide-react'
+import { Flame, Clock, Star, TrendingUp, Film, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { useEffect, useMemo, useCallback, useState } from 'react'
+import VideoCard from '@/components/xtube/VideoCard'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Home() {
   const {
@@ -147,7 +149,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a] text-white">
+    <div className="min-h-screen bg-[#0f0f0f] text-white">
       <Navbar />
 
       {/* Admin Login Modal */}
@@ -203,133 +205,95 @@ export default function Home() {
       ) : currentView === 'player' ? (
         <PlayerView />
       ) : (
-        <main className="pt-16 pb-20 md:pb-8">
-          {/* Hero Section */}
-          <HeroSection />
-
-          {/* Category Tabs */}
-          <div className="px-4 md:px-12 mt-6 mb-2">
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+        <main className="pt-20 pb-10">
+          {/* Category Tabs (Fixed or sticky recommended) */}
+          <div className="sticky top-16 z-30 bg-[#0f0f0f]/95 backdrop-blur-md px-4 md:px-8 lg:px-12 py-3 border-b border-white/5 overflow-x-auto no-scrollbar">
+            <div className="max-w-[2000px] mx-auto flex items-center gap-3">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                   selectedCategory === 'All'
-                    ? 'bg-[#ff2d2d] text-white'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white text-black shadow-lg'
+                    : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
                 }`}
               >
                 All
               </button>
+              {['Gaming', 'Music', 'Live', 'Tech', 'News', 'Recently Uploaded'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-white text-black shadow-lg'
+                      : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     selectedCategory === cat.name
-                      ? 'bg-[#ff2d2d] text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                      ? 'bg-white text-black shadow-lg'
+                      : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
                   }`}
                 >
                   {cat.name}
                 </button>
               ))}
-              {/* Also show categories from videos that might not be in the categories table */}
-              {Object.keys(categoryGroups)
-                .filter((cat) => cat !== 'Uncategorized' && !categories.some((c) => c.name === cat))
-                .map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      selectedCategory === cat
-                        ? 'bg-[#ff2d2d] text-white'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
             </div>
           </div>
 
-          {/* Trending Now */}
-          {trendingVideos.length > 0 && (
-            <ContentRow
-              title="Trending Now"
-              videos={trendingVideos}
-              icon={<Flame className="w-5 h-5 text-[#ff2d2d]" />}
-            />
-          )}
-
-          {/* Recently Added */}
-          {recentVideos.length > 0 && (
-            <ContentRow
-              title="Recently Added"
-              videos={recentVideos}
-              icon={<Clock className="w-5 h-5 text-blue-400" />}
-            />
-          )}
-
-          {/* Top Rated */}
-          {topRatedVideos.length > 0 && (
-            <ContentRow
-              title="Top Rated"
-              videos={topRatedVideos}
-              icon={<Star className="w-5 h-5 text-yellow-400" />}
-            />
-          )}
-
-          {/* Category-specific rows */}
-          {Object.entries(categoryGroups)
-            .filter(([cat]) => cat !== 'Uncategorized')
-            .map(([category, catVideos]) => (
-              <ContentRow
-                key={category}
-                title={category}
-                videos={catVideos}
-                icon={<TrendingUp className="w-5 h-5 text-green-400" />}
-              />
-            ))}
-
-          {/* Uncategorized */}
-          {categoryGroups['Uncategorized'] && categoryGroups['Uncategorized'].length > 0 && (
-            <ContentRow
-              title="Other"
-              videos={categoryGroups['Uncategorized']}
-              icon={<Film className="w-5 h-5 text-purple-400" />}
-            />
-          )}
-
-          {/* Empty State - No videos at all */}
-          {videos.length === 0 && !videosLoading && (
-            <div className="flex flex-col items-center justify-center py-20 px-4">
-              <Film className="w-20 h-20 text-gray-700 mb-4" />
-              <h3 className="text-xl font-bold text-gray-400 mb-2">No Videos Yet</h3>
-              <p className="text-gray-500 text-center max-w-md">
-                Videos will appear here once the admin uploads content.
-                <br />
-                <span className="text-gray-600 text-sm mt-1 block">
-                  Tip: Click the logo 7 times to access admin panel (desktop only)
-                </span>
-              </p>
+          <div className="max-w-[2400px] mx-auto px-4 md:px-8 lg:px-12 mt-6">
+            {/* Unified Video Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-10">
+              {videosLoading ? (
+                Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full rounded-2xl bg-[#272727]" />
+                    <div className="flex gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full bg-[#272727] flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full bg-[#272727]" />
+                        <Skeleton className="h-3 w-2/3 bg-[#272727]" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : videos.length > 0 ? (
+                videos.map((v) => (
+                  <VideoCard key={v.id} video={v} />
+                ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
+                  <Film className="w-20 h-20 mb-4" />
+                  <h3 className="text-xl font-bold">No Videos Found</h3>
+                  <p className="text-sm">Try another category or search term.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Footer */}
-          <footer className="mt-16 border-t border-white/5 px-4 md:px-12 py-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <footer className="mt-20 border-t border-white/5 px-4 md:px-12 py-12">
+            <div className="max-w-[2000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-2">
-                <Film className="w-5 h-5 text-[#ff2d2d]" />
-                <span className="text-lg font-bold text-[#ff2d2d]">Xtube</span>
+                <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
+                <span className="text-xl font-bold text-white tracking-tight">tube</span>
               </div>
-              <p className="text-gray-500 text-sm">
-                © 2024 Xtube. Premium streaming experience.
+              <div className="flex items-center gap-8 text-gray-500 text-sm font-medium">
+                <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Contact</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Advertise</span>
+              </div>
+              <p className="text-gray-600 text-xs">
+                © 2024 Xtube Platform. All rights reserved.
               </p>
-              <div className="flex items-center gap-4 text-gray-500 text-sm">
-                <span>Privacy</span>
-                <span>Terms</span>
-                <span>Contact</span>
-              </div>
             </div>
           </footer>
         </main>

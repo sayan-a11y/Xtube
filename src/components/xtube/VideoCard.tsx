@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore, VideoData } from '@/store/useAppStore'
-import { Play, Clock } from 'lucide-react'
+import { Play, Clock, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 interface VideoCardProps {
@@ -89,27 +89,17 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
-      className="relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,45,45,0.15)] hover:z-10"
+      className="group cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      aria-label={`Play ${video.title}`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          handleClick()
-        }
-      }}
     >
       {/* Thumbnail container */}
-      <div className="aspect-video relative overflow-hidden bg-[#1a1f2e]">
-        {/* Thumbnail image */}
+      <div className="aspect-video relative rounded-2xl overflow-hidden bg-[#1a1a1a] shadow-lg transition-all duration-300 group-hover:rounded-none group-hover:scale-105 group-hover:shadow-2xl z-0 group-hover:z-10">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
             isPreviewPlaying ? 'opacity-0' : 'opacity-100'
           }`}
           loading="lazy"
@@ -118,10 +108,7 @@ export default function VideoCard({ video }: VideoCardProps) {
 
         {/* Video preview layer */}
         {isPreviewPlaying && (
-          <div
-            className="absolute inset-0 transition-opacity duration-300"
-            style={{ opacity: isPreviewPlaying ? 1 : 0 }}
-          >
+          <div className="absolute inset-0">
             <video
               ref={videoRef}
               src={video.filePath}
@@ -134,34 +121,48 @@ export default function VideoCard({ video }: VideoCardProps) {
           </div>
         )}
 
-        {/* Play icon overlay (on hover) */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-[#ff2d2d]/90 flex items-center justify-center shadow-lg">
-              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-            </div>
-            <span className="text-white text-sm font-medium">Watch Now</span>
-          </div>
-        </div>
-
         {/* Duration badge */}
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
-          <Clock className="w-3 h-3" />
+        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-md">
           {video.duration}
         </div>
 
-        {/* Category badge */}
-        <div className="absolute top-2 left-2 bg-[#ff2d2d] text-white text-xs px-2 py-0.5 rounded-full">
-          {video.category}
+        {/* Quality Badge (Optional Pro) */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="bg-[#ff0000] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">4K</span>
         </div>
       </div>
 
-      {/* Title & info below thumbnail */}
-      <div className="p-2">
-        <h3 className="text-sm font-medium text-white mt-2 truncate" title={video.title}>
-          {video.title}
-        </h3>
-        <p className="text-xs text-gray-400 mt-1">{formatViews(video.views)}</p>
+      {/* Info Section */}
+      <div className="flex gap-3 mt-3">
+        {/* Avatar */}
+        <div className="flex-shrink-0 mt-1">
+          <div className="w-9 h-9 rounded-full bg-[#272727] flex items-center justify-center font-bold text-white text-xs border border-white/5">
+            {video.category[0].toUpperCase()}
+          </div>
+        </div>
+
+        {/* Text details */}
+        <div className="flex-1 min-w-0 pr-4 relative">
+          <h3 className="text-[15px] font-bold text-white line-clamp-2 leading-tight mb-1 group-hover:text-[#ff0000] transition-colors">
+            {video.title}
+          </h3>
+          <div className="flex flex-col text-[13px] text-gray-400 font-medium">
+            <div className="flex items-center gap-1 hover:text-white transition-colors">
+              <span>XTube Studio</span>
+              <CheckCircle2 className="w-3 h-3 text-gray-500 fill-gray-500" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>{formatViews(video.views)}</span>
+              <span className="w-0.5 h-0.5 rounded-full bg-gray-500" />
+              <span>12 hours ago</span>
+            </div>
+          </div>
+
+          {/* 3-dot menu */}
+          <button className="absolute -right-1 top-0 p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-white transition-all">
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -116,169 +116,85 @@ export default function Navbar() {
   )
 
   return (
-    <>
-      {/* Top Navbar */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-[#0b0f1a]/95 backdrop-blur-md shadow-lg shadow-black/20'
-            : 'bg-gradient-to-b from-[#0b0f1a]/80 to-transparent backdrop-blur-sm'
-        }`}
-      >
-        <div className="flex items-center justify-between px-4 md:px-8 h-16">
-          {/* Left: Logo + Nav */}
-          <div className="flex items-center gap-6">
-            {/* Logo */}
-            <button
-              onClick={handleLogoClick}
-              className="flex items-center gap-1.5 group cursor-pointer select-none"
-              aria-label="Xtube Home"
-            >
-              <Play className="w-5 h-5 text-[#ff2d2d] fill-[#ff2d2d] group-hover:scale-110 transition-transform" />
-              <span className="text-2xl font-bold text-[#ff2d2d] tracking-tight group-hover:brightness-110 transition-all">
-                Xtube
-              </span>
-            </button>
-
-            {/* Desktop Navigation */}
-            <ul className="hidden md:flex items-center gap-5">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.key}>
-                  <button
-                    onClick={() => handleNavClick(item.key)}
-                    className={`text-sm transition-colors cursor-pointer ${
-                      activeNav === item.key
-                        ? 'text-white font-medium'
-                        : 'text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Right: Search + Bell + Avatar */}
-          <div className="flex items-center gap-3">
-            {/* Desktop Search (always visible) */}
-            <div className="hidden md:block relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-full pl-9 pr-4 py-2 text-white text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#ff2d2d]/50 focus:bg-white/15 transition-all w-48 focus:w-64"
-              />
-            </div>
-
-            {/* Mobile Search Toggle */}
-            <button
-              onClick={() => setMobileSearchOpen((prev) => !prev)}
-              className="md:hidden p-2 text-gray-300 hover:text-white transition-colors cursor-pointer"
-              aria-label="Toggle search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Notification Bell */}
-            <button
-              className="p-2 text-gray-300 hover:text-white transition-colors relative cursor-pointer"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#ff2d2d] rounded-full" />
-            </button>
-
-            {/* Profile Avatar */}
-            <button
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff2d2d] to-[#b91c1c] flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:ring-2 hover:ring-[#ff2d2d]/50 transition-all"
-              aria-label="Profile"
-            >
-              <User className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Search Bar (expandable) */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${
-            mobileSearchOpen ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="px-4 pb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus={mobileSearchOpen}
-                className="w-full bg-white/10 border border-white/20 rounded-full pl-9 pr-4 py-2.5 text-white text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#ff2d2d]/50 focus:bg-white/15 transition-all"
-              />
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Bottom Navigation */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0b0f1a] border-t border-white/10 md:hidden safe-area-bottom"
-        aria-label="Mobile navigation"
-      >
-        <div className="flex items-center justify-around h-14 px-2">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#0f0f0f] border-b border-white/5`}
+    >
+      <div className="flex items-center justify-between px-4 md:px-6 h-16 max-w-[2400px] mx-auto gap-4">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
-            onClick={() => handleMobileNavClick('home')}
-            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 cursor-pointer transition-colors ${
-              activeNav === 'home' && !mobileSearchOpen
-                ? 'text-[#ff2d2d]'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-            aria-label="Home"
+            onClick={handleLogoClick}
+            className="flex items-center gap-1 group cursor-pointer select-none"
+            aria-label="Xtube Home"
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff0000]/20">
+              X
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
+              tube
+            </span>
           </button>
+        </div>
 
+        {/* Center: Search Bar */}
+        <div className="flex-1 max-w-2xl hidden md:block">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#ff0000] transition-colors" />
+            <input
+              type="text"
+              placeholder="Search videos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#121212] border border-[#272727] rounded-full pl-11 pr-4 py-2.5 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#ff0000]/50 focus:bg-[#1a1a1a] transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Right: Icons */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* Mobile Search Icon */}
           <button
-            onClick={() => handleMobileNavClick('search')}
-            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 cursor-pointer transition-colors ${
-              mobileSearchOpen ? 'text-[#ff2d2d]' : 'text-gray-400 hover:text-gray-200'
-            }`}
-            aria-label="Search"
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
           >
             <Search className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Search</span>
           </button>
 
-          <button
-            onClick={() => handleMobileNavClick('categories')}
-            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 cursor-pointer transition-colors ${
-              activeNav === 'categories' && !mobileSearchOpen
-                ? 'text-[#ff2d2d]'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-            aria-label="Categories"
-          >
-            <Grid3X3 className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Categories</span>
+          <button className="p-2 text-gray-300 hover:text-white transition-colors hidden sm:block">
+            <Play className="w-5 h-5 rotate-90" />
+          </button>
+          
+          <button className="p-2 text-gray-300 hover:text-white transition-colors relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ff0000] rounded-full" />
           </button>
 
+          {/* Profile Avatar */}
           <button
-            onClick={() => handleMobileNavClick('profile')}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 cursor-pointer text-gray-400 hover:text-gray-200 transition-colors"
+            className="w-8 h-8 rounded-full bg-[#272727] border border-white/10 flex items-center justify-center text-white text-xs font-bold hover:border-[#ff0000]/50 transition-all ml-1"
             aria-label="Profile"
           >
-            <User className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Profile</span>
+            <User className="w-4 h-4" />
           </button>
         </div>
-      </nav>
+      </div>
 
-      {/* Bottom spacer for mobile to prevent content behind fixed bottom nav */}
-      <div className="h-14 md:hidden" />
-    </>
+      {/* Mobile Search Dropdown */}
+      {mobileSearchOpen && (
+        <div className="md:hidden px-4 pb-4 bg-[#0f0f0f] border-b border-white/5 animate-in slide-in-from-top duration-200">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#121212] border border-[#272727] rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none"
+            />
+          </div>
+        </div>
+      )}
+    </nav>
   )
 }
