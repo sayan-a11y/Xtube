@@ -22,6 +22,7 @@ import {
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,9 @@ export default function PlayerView() {
   const [showQualityMenu, setShowQualityMenu] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [autoplay, setAutoplay] = useState(true)
+  const [showSeekOverlay, setShowSeekOverlay] = useState<'left' | 'right' | null>(null)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
   // Destructure for convenience
   const { video, loading, error, isPlaying, currentTime, duration, isBuffering, buffered, liked, likeCount, showCountdown, countdown } = playerState
@@ -115,6 +119,8 @@ export default function PlayerView() {
   const seekRef = useRef<HTMLDivElement>(null)
   const volumeSliderRef = useRef<HTMLDivElement>(null)
   const qualityMenuRef = useRef<HTMLDivElement>(null)
+  const speedMenuRef = useRef<HTMLDivElement>(null)
+  const lastTapTimeRef = useRef<number>(0)
 
   // ── Related Videos ───────────────────────────────────────────────────────
   const relatedVideos = useMemo(() => {
@@ -245,6 +251,28 @@ export default function PlayerView() {
     }
   }, [video])
 
+  // Quality Switching Logic
+  useEffect(() => {
+    if (!hlsRef.current) return
+    if (selectedQuality === 'auto') {
+      hlsRef.current.currentLevel = -1
+    } else {
+      const levelIndex = hlsRef.current.levels.findIndex(
+        (l) => l.height.toString() === selectedQuality
+      )
+      if (levelIndex !== -1) {
+        hlsRef.current.currentLevel = levelIndex
+      }
+    }
+  }, [selectedQuality])
+
+  // Playback Speed Logic
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackSpeed
+    }
+  }, [playbackSpeed])
+
   // ── Auto Next Video Handler (defined before use) ──────────────────────────
   const handleVideoEnded = useCallback(() => {
     if (!autoplay || relatedVideos.length === 0) return
@@ -324,11 +352,15 @@ export default function PlayerView() {
     }
   }, [])
 
-  // ── Close quality menu on outside click ──────────────────────────────────
+  // ── Close menus on outside click ─────────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (qualityMenuRef.current && !qualityMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (qualityMenuRef.current && !qualityMenuRef.current.contains(target)) {
         setShowQualityMenu(false)
+      }
+      if (speedMenuRef.current && !speedMenuRef.current.contains(target)) {
+        setShowSpeedMenu(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -346,6 +378,37 @@ export default function PlayerView() {
     }
     resetControlsTimeout()
   }, [resetControlsTimeout])
+
+  const handleSeek = useCallback((amount: number) => {
+    const vid = videoRef.current
+    if (!vid) return
+    vid.currentTime = Math.max(0, Math.min(vid.currentTime + amount, vid.duration))
+    setShowSeekOverlay(amount > 0 ? 'right' : 'left')
+    setTimeout(() => setShowSeekOverlay(null), 800)
+    resetControlsTimeout()
+  }, [resetControlsTimeout])
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300
+    const timeDiff = now - lastTapTimeRef.current
+
+    if (timeDiff < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const x = e.clientX - rect.left
+      if (x < rect.width / 2) {
+        handleSeek(-10)
+      } else {
+        handleSeek(10)
+      }
+      lastTapTimeRef.current = 0 // Reset
+    } else {
+      // Single tap
+      lastTapTimeRef.current = now
+      togglePlay()
+    }
+  }
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev)
@@ -580,9 +643,9 @@ export default function PlayerView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0b0f1a] pt-20">
-      <div className="max-w-[1800px] mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+    <div className="min-h-screen bg-[#0f0f0f] pt-16 md:pt-20">
+      <div className="max-w-[2000px] mx-auto px-0 md:px-6 lg:px-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-6">
           {/* ── Main Content ──────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
             {/* ── Player Area ──────────────────────────────────────────────── */}
@@ -600,9 +663,48 @@ export default function PlayerView() {
                 ref={videoRef}
                 className="w-full h-full object-contain"
                 playsInline
-                onClick={togglePlay}
-                onDoubleClick={toggleFullscreen}
+                onClick={handleVideoClick}
               />
+
+              {/* Seek Overlay (YouTube style ripple) */}
+              <AnimatePresence>
+                {showSeekOverlay && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={`absolute inset-0 pointer-events-none flex items-center z-20 ${
+                      showSeekOverlay === 'left' ? 'justify-start' : 'justify-end'
+                    }`}
+                  >
+                    <div
+                      className={`h-full w-1/3 bg-white/10 flex flex-col items-center justify-center gap-2 ${
+                        showSeekOverlay === 'left'
+                          ? 'rounded-r-full animate-in slide-in-from-left duration-300'
+                          : 'rounded-l-full animate-in slide-in-from-right duration-300'
+                      }`}
+                    >
+                      <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                        <span className="text-white font-bold text-xl">
+                          {showSeekOverlay === 'left' ? '-10s' : '+10s'}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ opacity: [0, 1, 0], x: showSeekOverlay === 'left' ? [0, -10] : [0, 10] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
+                            className="text-white"
+                          >
+                            {showSeekOverlay === 'left' ? '◀' : '▶'}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Buffering Indicator */}
               {isBuffering && isPlaying && (
@@ -821,6 +923,45 @@ export default function PlayerView() {
                           <Maximize className="w-5 h-5" />
                         )}
                       </button>
+
+                      {/* Speed Selector */}
+                      <div className="relative" ref={speedMenuRef}>
+                        <button
+                          onClick={() => setShowSpeedMenu((prev) => !prev)}
+                          className="text-white/80 hover:text-white transition-colors p-1 flex items-center gap-1"
+                          aria-label="Playback speed"
+                          aria-expanded={showSpeedMenu}
+                        >
+                          <span className="text-xs font-bold">{playbackSpeed}x</span>
+                        </button>
+
+                        {/* Speed Dropdown */}
+                        {showSpeedMenu && (
+                          <div className="absolute bottom-full right-0 mb-2 w-32 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div className="p-2 border-b border-white/10">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase px-2">Speed</p>
+                            </div>
+                            <div className="p-1">
+                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                                <button
+                                  key={speed}
+                                  onClick={() => {
+                                    setPlaybackSpeed(speed)
+                                    setShowSpeedMenu(false)
+                                  }}
+                                  className={`w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                                    playbackSpeed === speed
+                                      ? 'text-[#ff0000] bg-[#ff0000]/10 font-bold'
+                                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                  }`}
+                                >
+                                  {speed === 1 ? 'Normal' : `${speed}x`}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -828,110 +969,105 @@ export default function PlayerView() {
             </div>
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
-            <div className="mt-5">
+            <div className="mt-4 px-4 md:px-0">
               {/* Title */}
-              <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">
+              <h1 className="text-lg md:text-xl xl:text-2xl font-bold text-white leading-tight">
                 {video.title}
               </h1>
 
-              {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-3 mt-3">
-                <div className="flex items-center gap-1.5 text-gray-400 text-sm">
-                  <Eye className="w-4 h-4" />
-                  <span>{formatViews(video.views)}</span>
-                </div>
-                <span className="w-1 h-1 rounded-full bg-gray-600" />
-                <div className="flex items-center gap-1.5 text-gray-400 text-sm">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatDate(video.createdAt)}</span>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-4 mt-4">
-                {/* Like Button */}
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 transition-colors px-4 py-2 rounded-full ${
-                    liked
-                      ? 'text-[#ff2d2d] bg-[#ff2d2d]/10'
-                      : 'text-gray-400 hover:text-[#ff2d2d] hover:bg-white/5'
-                  }`}
-                  aria-label={liked ? 'Liked' : 'Like this video'}
-                >
-                  <ThumbsUp className={`w-5 h-5 ${liked ? 'fill-[#ff2d2d]' : ''}`} />
-                  <span className="text-sm font-medium">{likeCount.toLocaleString()}</span>
-                </button>
-
-                {/* Share Button */}
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 transition-colors px-4 py-2 rounded-full"
-                  aria-label="Share video"
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-sm font-medium">Share</span>
-                </button>
-              </div>
-
-              {/* Description */}
-              {video.description && (
-                <div className="mt-4 bg-white/5 rounded-xl p-4">
-                  <div
-                    className={`text-gray-300 text-sm leading-relaxed ${
-                      !descriptionExpanded ? 'line-clamp-2' : ''
-                    }`}
-                  >
-                    {video.description}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+                {/* Channel / Subscribe section */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff0000] flex items-center justify-center font-bold text-white text-lg">
+                    {video.category[0].toUpperCase()}
                   </div>
-                  <button
-                    onClick={() => setDescriptionExpanded((prev) => !prev)}
-                    className="text-[#ff2d2d] text-sm font-medium mt-2 hover:underline"
-                  >
-                    {descriptionExpanded ? 'Show less' : 'Show more'}
+                  <div>
+                    <h3 className="text-white font-semibold text-sm md:text-base">XTube Studio</h3>
+                    <p className="text-gray-400 text-xs">1.2M subscribers</p>
+                  </div>
+                  <button className="ml-2 px-4 py-2 bg-white text-black font-semibold rounded-full text-sm hover:bg-gray-200 transition-colors">
+                    Subscribe
                   </button>
                 </div>
-              )}
 
-              {/* Tags / Category */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                <span className="px-3 py-1 bg-[#ff2d2d]/20 text-[#ff2d2d] text-xs font-medium rounded-full">
-                  {video.category}
-                </span>
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                  {/* Like Button */}
+                  <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
+                    <button
+                      onClick={handleLike}
+                      className={`flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/10 ${
+                        liked ? 'text-[#ff0000]' : 'text-white'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-5 h-5 ${liked ? 'fill-[#ff0000]' : ''}`} />
+                      <span className="text-sm font-medium">{likeCount.toLocaleString()}</span>
+                    </button>
+                    <button className="px-4 py-2 hover:bg-white/10 transition-colors text-white">
+                      <ThumbsUp className="w-5 h-5 rotate-180" />
+                    </button>
+                  </div>
+
+                  {/* Share Button */}
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2 bg-[#272727] text-white hover:bg-white/10 transition-colors px-4 py-2 rounded-full"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <span className="text-sm font-medium">Share</span>
+                  </button>
+
+                  {/* Save/Download Button */}
+                  <button className="flex items-center gap-2 bg-[#272727] text-white hover:bg-white/10 transition-colors px-4 py-2 rounded-full">
+                    <Clock className="w-5 h-5" />
+                    <span className="text-sm font-medium">Save</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Description Box */}
+              <div className="mt-4 bg-[#272727] rounded-xl p-3 hover:bg-[#3f3f3f] transition-colors cursor-pointer group" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
+                <div className="flex items-center gap-2 text-white font-semibold text-sm mb-1">
+                  <span>{formatViews(video.views)}</span>
+                  <span>{formatDate(video.createdAt)}</span>
+                </div>
+                <div className={`text-white text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
+                  {video.description || "No description available for this video."}
+                </div>
+                <button className="text-white text-sm font-bold mt-1">
+                  {descriptionExpanded ? 'Show less' : '...more'}
+                </button>
               </div>
             </div>
           </div>
 
           {/* ── Right Sidebar ──────────────────────────────────────────────── */}
-          <div className="w-full lg:w-96 flex-shrink-0">
-            <div className="bg-[#111827] rounded-xl p-4">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-semibold text-lg">Up Next</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-xs">Autoplay</span>
-                  <Switch
-                    checked={autoplay}
-                    onCheckedChange={setAutoplay}
-                    className="data-[state=checked]:bg-[#ff2d2d]"
-                  />
-                </div>
+          <div className="w-full mt-6 lg:mt-0 px-4 md:px-0">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold text-lg">Recommended</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-xs">Autoplay</span>
+                <Switch
+                  checked={autoplay}
+                  onCheckedChange={setAutoplay}
+                  className="data-[state=checked]:bg-[#ff0000]"
+                />
               </div>
+            </div>
 
-              {/* Related Videos List */}
-              <div className="max-h-[calc(100vh-260px)] overflow-y-auto custom-scrollbar space-y-1">
-                {relatedVideos.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-8">No related videos</p>
-                )}
-                {relatedVideos.map((rv) => (
-                  <RelatedVideoItem
-                    key={rv.id}
-                    video={rv}
-                    isCurrent={rv.id === video.id}
-                    onClick={() => openPlayer(rv.id)}
-                  />
-                ))}
-              </div>
+            {/* Related Videos List */}
+            <div className="space-y-3">
+              {relatedVideos.length === 0 && (
+                <p className="text-gray-500 text-sm text-center py-8">No recommendations found</p>
+              )}
+              {relatedVideos.map((rv) => (
+                <RelatedVideoItem
+                  key={rv.id}
+                  video={rv}
+                  isCurrent={rv.id === video.id}
+                  onClick={() => openPlayer(rv.id)}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -951,39 +1087,32 @@ interface RelatedVideoItemProps {
 function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) {
   return (
     <div
-      className={`flex gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+      className={`flex gap-3 p-1.5 rounded-xl cursor-pointer transition-all duration-300 ${
         isCurrent
-          ? 'bg-[#ff2d2d]/10 border border-[#ff2d2d]/20'
-          : 'hover:bg-white/5'
+          ? 'bg-[#ff0000]/10 ring-1 ring-[#ff0000]/30'
+          : 'hover:bg-[#272727]'
       }`}
       onClick={onClick}
       role="button"
       tabIndex={0}
       aria-label={`Play ${video.title}`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
     >
       {/* Thumbnail */}
-      <div className="relative w-40 flex-shrink-0 aspect-video rounded-md overflow-hidden bg-[#1a1f2e]">
+      <div className="relative w-40 md:w-32 xl:w-40 flex-shrink-0 aspect-video rounded-xl overflow-hidden bg-[#1a1a1a]">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           loading="lazy"
           draggable={false}
         />
-        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
-          <Clock className="w-2.5 h-2.5" />
+        <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
           {video.duration}
         </div>
         {isCurrent && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <div className="w-8 h-8 rounded-full bg-[#ff2d2d]/90 flex items-center justify-center">
-              <Pause className="w-4 h-4 text-white fill-white" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <div className="w-8 h-8 rounded-full bg-[#ff0000] flex items-center justify-center shadow-lg shadow-[#ff0000]/40">
+              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
             </div>
           </div>
         )}
@@ -991,11 +1120,17 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
 
       {/* Info */}
       <div className="flex-1 min-w-0 py-0.5">
-        <h4 className="text-sm font-medium text-white line-clamp-2 leading-snug">
+        <h4 className="text-sm font-semibold text-white line-clamp-2 leading-tight group-hover:text-[#ff0000] transition-colors">
           {video.title}
         </h4>
-        <p className="text-xs text-gray-400 mt-1">{formatViews(video.views)}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{video.category}</p>
+        <div className="mt-1 space-y-0.5">
+          <p className="text-xs text-gray-400 font-medium truncate">XTube Studio</p>
+          <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+            <span>{formatViews(video.views)}</span>
+            <span>•</span>
+            <span>{formatDate(video.createdAt)}</span>
+          </div>
+        </div>
       </div>
     </div>
   )
