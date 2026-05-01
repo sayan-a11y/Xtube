@@ -47,29 +47,25 @@ export async function DELETE(
       return url.split('/').pop() || ''
     }
 
-    // 1. Delete original video file
+    // 1. Prepare cleanup tasks
+    const cleanupTasks: Promise<any>[] = []
+
+    // Original file cleanup
     if (video.filePath) {
-      try {
-        const key = extractKey(video.filePath)
-        await deleteFromR2(key)
-        console.log('Deleted original file:', key)
-      } catch (e) {
-        console.error('Failed to delete original file:', e)
-      }
+      const key = extractKey(video.filePath)
+      cleanupTasks.push(deleteFromR2(key).catch(e => console.error('R2: Failed to delete original file:', e)))
     }
 
-    // 2. Delete all assets in the video's dedicated folder (HLS, thumbnails, sprites)
-    try {
-      // Everything related to the video is stored under videos/[id]/
-      const folderPrefix = `videos/${id}/`
-      await deletePrefixFromR2(folderPrefix)
-      console.log('Deleted video assets folder:', folderPrefix)
-    } catch (e) {
-      console.error('Failed to delete video assets folder:', e)
-    }
+    // Folder (HLS/Assets) cleanup
+    const folderPrefix = `videos/${id}/`
+    cleanupTasks.push(deletePrefixFromR2(folderPrefix).catch(e => console.error('R2: Failed to delete prefix:', e)))
 
-    // Delete from database
+    // 2. Delete from database (Primary action)
     await db.video.delete({ where: { id } })
+
+    // 3. Wait for cleanup tasks to complete (or at least start them)
+    // We await them here to ensure the request doesn't end before they finish in some environments
+    await Promise.allSettled(cleanupTasks)
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -628,6 +628,8 @@ function VideosTab() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -687,14 +689,78 @@ function VideosTab() {
   }
 
   const handleDelete = async (id: string) => {
+    // 1. Store previous state for rollback
+    const previousVideos = [...videos]
+    
+    // 2. Optimistically remove from UI
+    setVideos(prev => prev.filter(v => v.id !== id))
+    setDeleteId(null)
+    setSelectedIds(prev => prev.filter(selectedId => selectedId !== id))
+    
     try {
       const res = await fetch(`/api/admin/videos/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast({ title: 'Video deleted', description: 'The video has been removed.' })
-        setDeleteId(null)
-        fetchVideos()
+        toast({ 
+          title: 'Video deleted', 
+          description: 'The video has been removed from the platform.',
+          className: 'bg-[#121826] border-white/10 text-white' 
+        })
+      } else {
+        throw new Error('Failed to delete')
       }
-    } catch {}
+    } catch (err) {
+      // 3. Rollback on failure
+      setVideos(previousVideos)
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to delete video. Please try again.', 
+        variant: 'destructive' 
+      })
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!confirm(`Delete ${selectedIds.length} videos permanently?`)) return
+
+    setBulkDeleting(true)
+    const previousVideos = [...videos]
+    const idsToDelete = [...selectedIds]
+
+    // Optimistic UI
+    setVideos(prev => prev.filter(v => !idsToDelete.includes(v.id)))
+    setSelectedIds([])
+
+    try {
+      // Delete in parallel
+      const results = await Promise.all(
+        idsToDelete.map(id => fetch(`/api/admin/videos/${id}`, { method: 'DELETE' }))
+      )
+      
+      const failedCount = results.filter(r => !r.ok).length
+      if (failedCount > 0) {
+        toast({ 
+          title: 'Partial Success', 
+          description: `Deleted ${idsToDelete.length - failedCount} videos, but ${failedCount} failed.`,
+          variant: 'destructive'
+        })
+        fetchVideos() // Re-sync to see what's left
+      } else {
+        toast({ 
+          title: 'Bulk delete successful', 
+          description: `${idsToDelete.length} videos removed.` 
+        })
+      }
+    } catch (err) {
+      setVideos(previousVideos)
+      toast({ title: 'Error', description: 'Bulk deletion failed.', variant: 'destructive' })
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
   }
 
   return (
@@ -705,6 +771,33 @@ function VideosTab() {
            <p className="text-sm text-gray-500">Manage and optimize your content library</p>
         </div>
         <div className="flex items-center gap-4">
+           {selectedIds.length > 0 && (
+             <motion.div 
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl"
+             >
+               <span className="text-xs font-black text-red-500 uppercase">{selectedIds.length} Selected</span>
+               <div className="flex items-center gap-2 border-l border-red-500/20 ml-2 pl-3">
+                 <button 
+                   onClick={() => {
+                     if (selectedIds.length === videos.length) setSelectedIds([])
+                     else setSelectedIds(videos.map(v => v.id))
+                   }}
+                   className="px-3 py-1 bg-white/10 text-white text-[10px] font-black rounded-lg hover:bg-white/20 transition-all uppercase"
+                 >
+                   {selectedIds.length === videos.length ? 'Deselect All' : 'Select All'}
+                 </button>
+                 <button 
+                   onClick={handleBulkDelete}
+                   disabled={bulkDeleting}
+                   className="px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-lg hover:bg-red-600 transition-all uppercase tracking-widest disabled:opacity-50"
+                 >
+                   {bulkDeleting ? 'Deleting...' : 'Delete All'}
+                 </button>
+               </div>
+             </motion.div>
+           )}
            <div className="relative group">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-[#ff2d2d] transition-colors" />
              <input 
@@ -739,8 +832,22 @@ function VideosTab() {
             layout
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden group hover:border-white/20 transition-all shadow-xl flex flex-col"
+            className={`bg-[#121826]/60 backdrop-blur-xl border rounded-2xl overflow-hidden group transition-all shadow-xl flex flex-col relative ${
+              selectedIds.includes(video.id) ? 'border-[#ff2d2d] ring-1 ring-[#ff2d2d]/50' : 'border-white/10 hover:border-white/20'
+            }`}
           >
+            {/* Selection Checkbox */}
+            <div className={`absolute top-3 left-3 z-20 transition-all duration-300 ${selectedIds.includes(video.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+               <button 
+                 onClick={(e) => { e.stopPropagation(); toggleSelect(video.id) }}
+                 className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                   selectedIds.includes(video.id) ? 'bg-[#ff2d2d] border-[#ff2d2d]' : 'bg-black/40 border-white/30 hover:border-white'
+                 }`}
+               >
+                 {selectedIds.includes(video.id) && <Check className="w-4 h-4 text-white stroke-[4px]" />}
+               </button>
+            </div>
+
             <div className="relative aspect-video bg-black/40 overflow-hidden">
                <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
