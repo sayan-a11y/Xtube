@@ -117,10 +117,8 @@ export default function AdminPanel() {
             { id: 'videos', label: 'All Videos', icon: Film },
             { id: 'categories', label: 'Categories', icon: FolderOpen },
             { id: 'upload', label: 'Upload Video', icon: Upload },
-            { id: 'users', label: 'Users', icon: Users },
             { id: 'analytics', label: 'Analytics', icon: BarChart3 },
             { id: 'comments', label: 'Comments', icon: MessageSquare },
-            { id: 'settings', label: 'Settings', icon: Settings },
           ].map((item) => {
             const Icon = item.icon
             const isActive = adminTab === item.id
