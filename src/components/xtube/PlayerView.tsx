@@ -870,10 +870,73 @@ export default function PlayerView() {
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-4 sm:gap-6">
-                      <Subtitles className="w-5 h-5 text-white/80 cursor-pointer hover:text-white hidden sm:block" />
-                      <Settings className="w-5 h-5 text-white/80 cursor-pointer hover:rotate-45 transition-transform" onClick={() => setShowQualityMenu(!showQualityMenu)} />
-                      <Maximize className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={toggleFullscreen} />
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      <button 
+                        className="p-2 text-white/80 hover:text-white transition-colors relative group"
+                        onClick={() => {
+                          // Simple toggle for demo
+                          const msg = document.createElement('div')
+                          msg.className = "absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] px-2 py-1 rounded font-bold whitespace-nowrap"
+                          msg.innerText = "CC TOGGLED"
+                          event?.currentTarget.appendChild(msg)
+                          setTimeout(() => msg.remove(), 1000)
+                        }}
+                      >
+                        <Subtitles className="w-5 h-5" />
+                        <div className="absolute -top-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap -translate-y-full">Subtitles (c)</div>
+                      </button>
+
+                      <div className="relative" ref={qualityMenuRef}>
+                        <button 
+                          className={`p-2 transition-all ${showQualityMenu ? 'text-[#ff2d2d] rotate-45' : 'text-white/80 hover:text-white'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowQualityMenu(!showQualityMenu);
+                            setShowSpeedMenu(false);
+                          }}
+                        >
+                          <Settings className="w-5 h-5" />
+                        </button>
+                        
+                        <AnimatePresence>
+                          {showQualityMenu && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              className="absolute bottom-full right-0 mb-4 w-48 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
+                            >
+                              <div className="p-3 border-b border-white/10">
+                                <span className="text-[11px] font-bold text-[#aaaaaa] uppercase tracking-wider">Quality</span>
+                              </div>
+                              <div className="py-1">
+                                {QUALITY_OPTIONS.map((opt) => (
+                                  <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                      setSelectedQuality(opt.value);
+                                      setShowQualityMenu(false);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                                      selectedQuality === opt.value ? 'text-[#ff2d2d] bg-white/5 font-bold' : 'text-white/80 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <span>{opt.label}</span>
+                                    {selectedQuality === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-[#ff2d2d]" />}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <button 
+                        className="p-2 text-white/80 hover:text-white transition-colors"
+                        onClick={toggleFullscreen}
+                      >
+                        <Maximize className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 </div>
