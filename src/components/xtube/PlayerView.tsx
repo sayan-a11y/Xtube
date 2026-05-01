@@ -651,20 +651,29 @@ export default function PlayerView() {
             {/* ── Player Area ──────────────────────────────────────────────── */}
             <div
               ref={playerContainerRef}
-              className="relative w-full aspect-video bg-black rounded-xl overflow-hidden group cursor-none"
+              className="relative w-full aspect-video bg-black rounded-xl overflow-hidden group cursor-none select-none"
               onMouseMove={resetControlsTimeout}
               onMouseLeave={() => {
                 if (isPlaying) setShowControls(false)
               }}
-              style={{ cursor: showControls ? 'default' : 'none' }}
+              style={{ 
+                cursor: showControls ? 'default' : 'none',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               {/* Video Element */}
               <video
                 ref={videoRef}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain relative z-0"
                 playsInline
                 onClick={handleVideoClick}
               />
+
+              {/* Invisible Gesture Zones for Double Tap */}
+              <div className="absolute inset-0 z-10 flex pointer-events-none">
+                <div className="w-1/2 h-full pointer-events-auto bg-transparent" onClick={handleVideoClick} />
+                <div className="w-1/2 h-full pointer-events-auto bg-transparent" onClick={handleVideoClick} />
+              </div>
 
               {/* Seek Overlay (YouTube style ripple) */}
               <AnimatePresence>
@@ -678,10 +687,10 @@ export default function PlayerView() {
                     }`}
                   >
                     <div
-                      className={`h-full w-1/3 bg-white/10 flex flex-col items-center justify-center gap-2 ${
+                      className={`h-full w-1/3 bg-transparent flex flex-col items-center justify-center gap-2 ${
                         showSeekOverlay === 'left'
-                          ? 'rounded-r-full animate-in slide-in-from-left duration-300'
-                          : 'rounded-l-full animate-in slide-in-from-right duration-300'
+                          ? 'rounded-r-full'
+                          : 'rounded-l-full'
                       }`}
                     >
                       <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
@@ -775,7 +784,7 @@ export default function PlayerView() {
                   {/* Seek Bar */}
                   <div
                     ref={seekRef}
-                    className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer group/seek mb-3 hover:h-2.5 transition-all"
+                    className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer group/seek mb-3 hover:h-2.5 transition-all relative z-30 overflow-hidden"
                     onClick={handleSeekClick}
                     role="slider"
                     aria-label="Seek"
@@ -791,11 +800,11 @@ export default function PlayerView() {
                     />
                     {/* Progress */}
                     <div
-                      className="h-full bg-[#ff2d2d] rounded-full relative transition-none"
+                      className="h-full bg-[#ff0000] rounded-full relative transition-none"
                       style={{ width: `${seekProgress}%` }}
                     >
                       {/* Thumb */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff2d2d] rounded-full shadow-lg opacity-0 group-hover/seek:opacity-100 transition-opacity" />
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff0000] rounded-full shadow-lg opacity-0 group-hover/seek:opacity-100 transition-opacity" />
                     </div>
                   </div>
 
