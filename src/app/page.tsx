@@ -248,9 +248,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="max-w-[2400px] mx-auto px-4 md:px-8 lg:px-12 mt-6">
-            {/* Unified Video Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-10">
+          <div className="max-w-[2400px] mx-auto px-4 md:px-8 lg:px-12 mt-4 md:mt-8">
+            {/* Unified Video Grid - OTT Style */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-6 md:gap-y-10">
               {videosLoading ? (
                 Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="space-y-3">

@@ -149,7 +149,7 @@ export default function Navbar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1.5 md:gap-4">
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
             className="md:hidden p-2 text-gray-400 hover:text-gray-900 transition-colors"
@@ -159,14 +159,14 @@ export default function Navbar() {
           
           <button 
             onClick={() => useAppStore.getState().setShowAdminLogin(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-[#6d9bc3]/10 text-[#6d9bc3] font-bold rounded-full text-sm hover:bg-[#6d9bc3]/20 transition-all"
+            className="flex items-center gap-2 px-3 md:px-5 py-2 bg-[#6d9bc3]/10 text-[#6d9bc3] font-bold rounded-full text-xs md:text-sm hover:bg-[#6d9bc3]/20 transition-all"
           >
-            <User className="w-4 h-4" />
+            <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Dashboard</span>
           </button>
 
-          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-            <User className="w-5 h-5 text-gray-400" />
+          <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+            <User className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
           </div>
         </div>
       </div>

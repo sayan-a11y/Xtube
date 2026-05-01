@@ -868,38 +868,38 @@ export default function PlayerView() {
             </div>
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
-            <div className="mt-8 px-4 md:px-0">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
+            <div className="mt-4 md:mt-8 px-4 md:px-0">
+              <h1 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">
                 {video.title}
               </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-6 pb-6 border-b border-gray-200">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mt-4 md:mt-6 pb-6 border-b border-gray-200">
                 {/* Channel / Subscribe section */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-xl border-2 border-white shadow-sm">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-lg md:text-xl border-2 border-white shadow-sm">
                     {video.category[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-gray-900 font-bold text-base">XTube Studio</h3>
-                    <p className="text-gray-500 text-sm">1.2M subscribers</p>
+                    <h3 className="text-gray-900 font-bold text-sm md:text-base">XTube Studio</h3>
+                    <p className="text-gray-500 text-[10px] md:text-sm">1.2M subscribers</p>
                   </div>
-                  <button className="ml-4 px-8 py-2 bg-[#6d9bc3] text-white font-bold rounded-full text-sm hover:brightness-110 shadow-lg shadow-[#6d9bc3]/20 transition-all">
+                  <button className="ml-auto md:ml-4 px-6 md:px-8 py-2 bg-[#6d9bc3] text-white font-bold rounded-full text-xs md:text-sm hover:brightness-110 shadow-lg shadow-[#6d9bc3]/20 transition-all">
                     Subscribe
                   </button>
                 </div>
 
-                {/* Action buttons - Pill Style from image */}
-                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
-                    <ThumbsUp className="w-4 h-4" />
+                {/* Action buttons - Mobile Scrollable */}
+                <div className="flex items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 py-1">
+                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
+                    <ThumbsUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     <span>{likeCount.toLocaleString()}</span>
                   </button>
-                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
-                    <Share2 className="w-4 h-4" />
+                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
+                    <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     <span>Share</span>
                   </button>
-                  <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-sm">
-                    <Clock className="w-4 h-4" />
+                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
+                    <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     <span>Save</span>
                   </button>
                 </div>
@@ -999,15 +999,15 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 py-1">
-        <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#6d9bc3] transition-colors">
+      <div className="flex-1 min-w-0 py-1 pr-2">
+        <h4 className="text-[13px] md:text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#6d9bc3] transition-colors">
           {video.title}
         </h4>
-        <div className="mt-2 space-y-1">
-          <p className="text-xs text-gray-500 font-bold">XTube Studio</p>
-          <div className="flex items-center gap-2 text-[11px] text-gray-400 font-semibold">
+        <div className="mt-1 md:mt-2 space-y-0.5 md:space-y-1">
+          <p className="text-[11px] md:text-xs text-gray-500 font-bold">XTube Studio</p>
+          <div className="flex items-center gap-2 text-[10px] md:text-[11px] text-gray-400 font-semibold">
             <span>{formatViews(video.views)}</span>
-            <span className="w-1 h-1 rounded-full bg-gray-300" />
+            <span className="w-0.5 h-0.5 md:w-1 md:h-1 rounded-full bg-gray-300" />
             <span>{formatDate(video.createdAt)}</span>
           </div>
         </div>
