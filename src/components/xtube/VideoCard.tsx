@@ -90,18 +90,18 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
-      className="group cursor-pointer flex flex-col gap-3 bg-white rounded-[20px] p-4 shadow-sm hover:shadow-xl transition-all duration-300"
+      className="group cursor-pointer flex flex-col gap-3 transition-all duration-300"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {/* Thumbnail container */}
-      <div className="aspect-video relative rounded-2xl overflow-hidden bg-gray-200 shadow-sm transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl z-0 group-hover:z-10">
+      <div className="aspect-video relative rounded-xl overflow-hidden bg-white/5 transition-all duration-300 z-0">
         {!imgError ? (
           <img
             src={video.thumbnail}
             alt={video.title}
-            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${
               isPreviewPlaying ? 'opacity-0' : 'opacity-100'
             }`}
             loading="lazy"
@@ -111,7 +111,7 @@ export default function VideoCard({ video }: VideoCardProps) {
         ) : (
           <video
             src={`${video.filePath}#t=1`}
-            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${
               isPreviewPlaying ? 'opacity-0' : 'opacity-100'
             }`}
             muted
@@ -136,33 +136,33 @@ export default function VideoCard({ video }: VideoCardProps) {
         )}
 
         {/* Duration badge */}
-        <div className="absolute bottom-2.5 right-2.5 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm z-30">
+        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-medium px-1.5 py-0.5 rounded-md z-30">
           {video.duration}
         </div>
       </div>
 
       {/* Info Section */}
-      <div className="flex gap-4 px-1">
+      <div className="flex gap-3 px-1">
         {/* Avatar */}
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 text-sm border border-gray-100">
+        <div className="flex-shrink-0 mt-1">
+          <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center font-medium text-white text-sm">
             {video.category[0].toUpperCase()}
           </div>
         </div>
 
         {/* Text details */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[14px] font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[#ff2d2d] transition-colors mb-1">
+          <h3 className="text-[14px] font-semibold text-white line-clamp-2 leading-tight group-hover:text-white transition-colors mb-1.5">
             {video.title}
           </h3>
-          <div className="flex flex-col text-[11px] text-[#9ca3af] font-bold uppercase tracking-wider">
-            <div className="flex items-center gap-1">
-              <span>XTube Studio</span>
-              <CheckCircle2 className="w-3 h-3 text-[#ff2d2d]" />
+          <div className="flex flex-col text-[12px] text-[#aaaaaa]">
+            <div className="flex items-center gap-1 hover:text-white transition-colors">
+              <span>Xtube Media</span>
+              <CheckCircle2 className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-1.5 mt-0.5">
               <span>{formatViews(video.views)}</span>
-              <span className="w-1 h-1 rounded-full bg-gray-200" />
+              <span className="w-0.5 h-0.5 rounded-full bg-[#aaaaaa]" />
               <span>{new Date(video.createdAt).toLocaleDateString()}</span>
             </div>
           </div>

@@ -102,14 +102,6 @@ export default function Home() {
   }, [videos])
 
   // Group videos by category
-  const categoryGroups = useMemo(() => {
-    const groups: Record<string, VideoData[]> = {}
-    videos.forEach((v) => {
-      if (!groups[v.category]) groups[v.category] = []
-      groups[v.category].push(v)
-    })
-    return groups
-  }, [videos])
 
   // Handle admin login
   const handleAdminLogin = useCallback(
@@ -149,13 +141,13 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#ff2d2d] to-[#ff3c1a] text-[#1f2937] pb-20">
+    <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
       <Navbar />
 
       {/* Admin Login Modal */}
       {showAdminLogin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#111827] border border-white/10 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="bg-[#181818] border border-white/10 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-[#ff2d2d]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Film className="w-8 h-8 text-[#ff2d2d]" />
@@ -205,40 +197,41 @@ export default function Home() {
       ) : currentView === 'player' ? (
         <PlayerView />
       ) : (
-        <main className="pt-20">
-          <div className="sticky top-16 z-30 px-2 md:px-8 lg:px-12 py-6 overflow-x-auto no-scrollbar">
-            <div className="max-w-[1100px] mx-auto flex items-center gap-3 w-max">
+        <main className="pt-16">
+          {/* Category Tabs - YouTube Dark Style */}
+          <div className="sticky top-14 z-30 bg-[#0f0f0f]/95 backdrop-blur-md py-3 overflow-x-auto no-scrollbar border-b border-white/5">
+            <div className="flex items-center gap-3 px-4 md:px-6 w-max mx-auto md:mx-0 min-w-full md:justify-start">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
+                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   selectedCategory === 'All'
-                    ? 'bg-white text-[#ff2d2d]'
-                    : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
+                    ? 'bg-white text-black'
+                    : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
                 All
               </button>
-              {['Gaming', 'Music', 'Live', 'Tech', 'News', 'Recently Uploaded'].map((cat) => (
+              {['Gaming', 'Music', 'Live', 'Tech', 'News', 'Motivation', 'Cricket'].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     selectedCategory === cat
-                      ? 'bg-white text-[#ff2d2d]'
-                      : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+                      ? 'bg-white text-black'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     selectedCategory === cat.name
-                      ? 'bg-white text-[#ff2d2d]'
-                      : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
+                      ? 'bg-white text-black'
+                      : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
                   {cat.name}
@@ -247,52 +240,48 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="max-w-[1100px] mx-auto px-2 md:px-8 lg:px-12 mt-4 md:mt-8">
-            {/* White Card Grid container */}
-            <div className="bg-white rounded-[20px] p-4 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-                {videosLoading ? (
-                  Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="space-y-3">
-                      <Skeleton className="aspect-video w-full rounded-2xl bg-gray-200" />
-                      <div className="flex gap-3">
-                        <Skeleton className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-full bg-gray-200" />
-                          <Skeleton className="h-3 w-2/3 bg-gray-200" />
-                        </div>
+          <div className="px-4 md:px-6 lg:px-8 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-10">
+              {videosLoading ? (
+                Array.from({ length: 15 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full rounded-xl bg-white/5" />
+                    <div className="flex gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full bg-white/5 flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full bg-white/5" />
+                        <Skeleton className="h-3 w-2/3 bg-white/5" />
                       </div>
                     </div>
-                  ))
-                ) : videos.length > 0 ? (
-                  videos.map((v) => (
-                    <VideoCard key={v.id} video={v} />
-                  ))
-                ) : (
-                  <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
-                    <Film className="w-20 h-20 mb-4 text-gray-400" />
-                    <h3 className="text-xl font-bold text-gray-600">No Videos Found</h3>
-                    <p className="text-sm text-gray-400">Try another category or search term.</p>
                   </div>
-                )}
-              </div>
+                ))
+              ) : videos.length > 0 ? (
+                videos.map((v) => (
+                  <VideoCard key={v.id} video={v} />
+                ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center justify-center py-40 opacity-30">
+                  <Film className="w-20 h-20 mb-4" />
+                  <h3 className="text-xl font-bold">No Videos Found</h3>
+                  <p className="text-sm">Try another category or search term.</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Footer */}
-          <footer className="mt-20 border-t border-gray-200 px-4 md:px-12 py-12 bg-white">
+          <footer className="mt-20 border-t border-white/5 px-4 md:px-12 py-12 bg-[#0f0f0f]">
             <div className="max-w-[2000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
-                <span className="text-xl font-bold text-gray-900 tracking-tight">tube</span>
+                <span className="text-xl font-bold text-white tracking-tight">tube</span>
               </div>
-              <div className="flex items-center gap-8 text-[#9ca3af] text-sm font-medium">
-                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Privacy</span>
-                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Terms</span>
-                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Contact</span>
-                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Advertise</span>
+              <div className="flex items-center gap-8 text-gray-500 text-sm font-medium">
+                <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Contact</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Advertise</span>
               </div>
-              <p className="text-gray-400 text-xs">
+              <p className="text-gray-600 text-xs">
                 © 2026 Xtube Platform. All rights reserved.
               </p>
             </div>

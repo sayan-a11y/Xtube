@@ -676,15 +676,15 @@ export default function PlayerView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#ff2d2d] to-[#ff3c1a] pt-24 pb-20 px-4">
-      <div className="max-w-[1100px] mx-auto bg-white rounded-[20px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-0">
+    <div className="min-h-screen bg-[#0f0f0f] pt-14 pb-20">
+      <div className="max-w-[1280px] mx-auto lg:px-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* ── Main Content ──────────────────────────────────────────────── */}
-          <div className="p-4 md:p-8">
+          <div className="flex-1 min-w-0">
             {/* ── Player Area ──────────────────────────────────────────────── */}
             <div
               ref={playerContainerRef}
-              className="relative w-full aspect-video bg-[#0f172a] rounded-[16px] overflow-hidden group cursor-none"
+              className="relative w-full aspect-video bg-black lg:rounded-xl overflow-hidden group cursor-none"
               onMouseMove={resetControlsTimeout}
               onTouchStart={resetControlsTimeout}
               onMouseLeave={() => {
@@ -771,16 +771,16 @@ export default function PlayerView() {
               {/* Big Play Button (when paused) - YouTube Hybrid Style */}
               {!isPlaying && !isBuffering && (
                 <div
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                  onClick={togglePlay}
+                  className="absolute inset-0 flex items-center justify-center z-30"
                 >
-                  <motion.div 
+                  <motion.button 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm border border-white/20"
+                    onClick={togglePlay}
+                    className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm border border-white/20 hover:bg-black/60 transition-all cursor-pointer pointer-events-auto"
                   >
                     <Play className="w-10 h-10 text-white fill-white ml-2" />
-                  </motion.div>
+                  </motion.button>
                 </div>
               )}
 
@@ -830,32 +830,42 @@ export default function PlayerView() {
                 </div>
 
                 {/* Bottom Controls - Hybrid Modern UI */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md px-6 py-3 pointer-events-auto border-t border-white/10">
-                  {/* Seek Bar */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-6 py-4 pointer-events-auto">
+                  {/* Seek Bar - Enhanced Touch Area */}
                   <div
                     ref={seekRef}
-                    className="absolute top-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/seek"
+                    className="absolute top-0 left-0 right-0 h-4 -translate-y-1/2 cursor-pointer group/seek flex items-center"
                     onClick={handleSeekClick}
                   >
-                    <div className="h-full bg-[#ff2d2d] transition-none relative" style={{ width: `${seekProgress}%` }}>
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff2d2d] rounded-full scale-0 group-hover/seek:scale-100 transition-transform shadow-lg" />
+                    <div className="w-full h-1 bg-white/20 relative rounded-full overflow-hidden">
+                      <div className="h-full bg-[#ff2d2d] transition-none" style={{ width: `${seekProgress}%` }} />
                     </div>
+                    {/* Scrubbing Handle */}
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#ff2d2d] rounded-full shadow-xl scale-0 group-hover/seek:scale-100 transition-transform z-10"
+                      style={{ left: `calc(${seekProgress}% - 7px)` }}
+                    />
                   </div>
 
-                  <div className="flex items-center justify-between mt-2.5">
+                  <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-6">
                       <button onClick={togglePlay} className="text-white hover:text-[#ff2d2d] transition-colors">
-                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
+                        {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 fill-white" />}
                       </button>
-                      <VolumeIcon className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" onClick={toggleMute} />
-                      <span className="text-white/80 text-xs font-bold tracking-tight">
+                      <div className="flex items-center gap-4 group/vol">
+                        <VolumeIcon className="w-6 h-6 text-white cursor-pointer" onClick={toggleMute} />
+                        <div className="w-20 h-1 bg-white/20 rounded-full cursor-pointer relative hidden sm:block">
+                           <div className="h-full bg-white rounded-full" style={{ width: `${isMuted ? 0 : volume * 100}%` }} />
+                        </div>
+                      </div>
+                      <span className="text-white text-xs font-medium">
                         {formatTime(currentTime)} / {formatTime(duration)}
                       </span>
                     </div>
                     
                     <div className="flex items-center gap-6">
-                      <Settings className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowQualityMenu(!showQualityMenu)} />
-                      <Maximize className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={toggleFullscreen} />
+                      <Settings className="w-6 h-6 text-white cursor-pointer hover:rotate-45 transition-transform" onClick={() => setShowQualityMenu(!showQualityMenu)} />
+                      <Maximize className="w-6 h-6 text-white cursor-pointer" onClick={toggleFullscreen} />
                     </div>
                   </div>
                 </div>
@@ -863,85 +873,70 @@ export default function PlayerView() {
             </div>
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
-            <div className="mt-8">
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+            <div className="mt-4 px-4 lg:px-0">
+              <h1 className="text-xl font-bold text-white line-clamp-2">
                 {video.title}
               </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-6 pb-8 border-b border-gray-100">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
                 {/* Channel Section */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[#6b7280] text-xl border-2 border-white shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white text-lg">
                     {video.category[0].toUpperCase()}
                   </div>
-                  <div>
-                    <h3 className="text-gray-900 font-bold text-base">XTube Studio</h3>
-                    <p className="text-[#9ca3af] text-xs font-medium">1.2M subscribers</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-semibold text-base flex items-center gap-1">
+                      Xtube Media
+                      <CheckCircle2 className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
+                    </h3>
+                    <p className="text-[#aaaaaa] text-[12px]">1.24M subscribers</p>
                   </div>
-                  <button className="ml-4 px-8 py-2.5 bg-[#ff2d2d] text-white font-bold rounded-full text-sm hover:brightness-110 shadow-lg shadow-[#ff2d2d]/20 transition-all uppercase tracking-wider">
+                  <button className="ml-2 px-4 py-2 bg-white text-black font-semibold rounded-full text-sm hover:bg-[#e6e6e6] transition-all">
                     Subscribe
                   </button>
                 </div>
 
-                {/* Action icons - Minimal Grey style */}
-                <div className="flex items-center gap-5">
-                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
-                    <ThumbsUp className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase">{likeCount.toLocaleString()}</span>
-                  </button>
-                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-white/10 rounded-full overflow-hidden">
+                    <button className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-white/10">
+                      <ThumbsUp className="w-5 h-5 text-white" />
+                      <span className="text-sm font-medium text-white">{likeCount.toLocaleString()}</span>
+                    </button>
+                    <button className="px-4 py-2 hover:bg-white/10 transition-colors">
+                      <ThumbsUp className="w-5 h-5 text-white rotate-180" />
+                    </button>
+                  </div>
+                  <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
                     <Share2 className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase">Share</span>
+                    <span className="text-sm font-medium">Share</span>
                   </button>
-                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
-                    <Clock className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase">Save</span>
-                  </button>
-                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                  <button className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
                     <MoreVertical className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase">More</span>
                   </button>
                 </div>
               </div>
 
-              {/* Description placeholders as grey lines */}
-              <div className="mt-8 space-y-3">
-                <div className="h-3 w-full bg-gray-100 rounded-full" />
-                <div className="h-3 w-4/5 bg-gray-100 rounded-full" />
-                <button 
-                  className="text-[#ff2d2d] text-xs font-bold uppercase tracking-widest mt-4 hover:underline"
-                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                >
-                  {descriptionExpanded ? 'Show less' : 'Read more'}
+              {/* Description box */}
+              <div className="mt-4 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors cursor-pointer" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
+                <div className="flex gap-2 text-sm font-semibold text-white mb-1">
+                   <span>{formatViews(video.views)}</span>
+                   <span>{formatDate(video.createdAt)}</span>
+                </div>
+                <div className={`text-sm text-white leading-relaxed ${descriptionExpanded ? '' : 'line-clamp-2'}`}>
+                  {video.description || "Welcome to Xtube. The best video experience."}
+                </div>
+                <button className="text-white text-sm font-semibold mt-1">
+                  {descriptionExpanded ? 'Show less' : '...more'}
                 </button>
-                {descriptionExpanded && (
-                  <div className="text-[#6b7280] text-sm mt-4 leading-relaxed p-4 bg-gray-50 rounded-xl">
-                    {video.description || "Modern YouTube style experience."}
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
           {/* ── Right Sidebar ──────────────────────────────────────────────── */}
-          <div className="w-full p-4 md:p-8 bg-gray-50/50 border-l border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-gray-900 font-bold text-lg">Next Video</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-[#9ca3af] text-[10px] font-black uppercase tracking-tighter">Autoplay</span>
-                <Switch
-                  checked={autoplay}
-                  onCheckedChange={setAutoplay}
-                  className="data-[state=checked]:bg-[#ff2d2d]"
-                />
-              </div>
-            </div>
-
+          <div className="w-full lg:w-[400px] px-4 lg:px-0">
             {/* Related Videos List */}
-            <div className="space-y-3">
-              {relatedVideos.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-8">No recommendations found</p>
-              )}
+            <div className="flex flex-col gap-3">
               {relatedVideos.map((rv) => (
                 <RelatedVideoItem
                   key={rv.id}
@@ -969,47 +964,32 @@ interface RelatedVideoItemProps {
 function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) {
   return (
     <div
-      className={`flex gap-4 p-2 rounded-2xl cursor-pointer transition-all duration-300 ${
-        isCurrent
-          ? 'bg-white shadow-lg border border-gray-100 ring-2 ring-[#ff2d2d]/20'
-          : 'hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100'
-      }`}
+      className={`flex gap-3 group cursor-pointer ${isCurrent ? 'opacity-50' : ''}`}
       onClick={onClick}
-      role="button"
-      tabIndex={0}
-      aria-label={`Play ${video.title}`}
     >
       {/* Thumbnail */}
-      <div className="relative w-40 md:w-32 xl:w-44 flex-shrink-0 aspect-video rounded-xl overflow-hidden bg-gray-200 shadow-sm">
+      <div className="relative w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+          className="w-full h-full object-cover"
           loading="lazy"
-          draggable={false}
         />
-        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
+        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[11px] font-medium px-1.5 py-0.5 rounded-md">
           {video.duration}
         </div>
-        {isCurrent && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#ff2d2d]/20 backdrop-blur-[1px]">
-            <div className="w-10 h-10 rounded-full bg-[#ff2d2d] flex items-center justify-center shadow-xl">
-              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 py-1 pr-2">
-        <h4 className="text-[13px] md:text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#ff2d2d] transition-colors">
+      <div className="flex-1 min-w-0">
+        <h4 className="text-[14px] font-semibold text-white line-clamp-2 leading-snug group-hover:text-white mb-1">
           {video.title}
         </h4>
-        <div className="mt-1 md:mt-2 space-y-0.5 md:space-y-1">
-          <p className="text-[11px] md:text-xs text-gray-500 font-bold">XTube Studio</p>
-          <div className="flex items-center gap-2 text-[10px] md:text-[11px] text-gray-400 font-semibold">
+        <div className="flex flex-col text-[12px] text-[#aaaaaa]">
+          <span className="hover:text-white transition-colors">Xtube Media</span>
+          <div className="flex items-center gap-1 mt-0.5">
             <span>{formatViews(video.views)}</span>
-            <span className="w-0.5 h-0.5 md:w-1 md:h-1 rounded-full bg-gray-300" />
+            <span className="w-0.5 h-0.5 rounded-full bg-[#aaaaaa]" />
             <span>{formatDate(video.createdAt)}</span>
           </div>
         </div>
