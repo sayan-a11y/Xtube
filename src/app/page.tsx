@@ -198,47 +198,6 @@ export default function Home() {
         <PlayerView />
       ) : (
         <main className="pt-16">
-          {/* Category Tabs - YouTube Dark Style */}
-          <div className="sticky top-14 z-30 bg-[#0f0f0f]/95 backdrop-blur-md py-3 overflow-x-auto no-scrollbar border-b border-white/5">
-            <div className="flex items-center gap-3 px-4 md:px-6 w-max mx-auto md:mx-0 min-w-full md:justify-start">
-              <button
-                onClick={() => setSelectedCategory('All')}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  selectedCategory === 'All'
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                All
-              </button>
-              {['Gaming', 'Music', 'Live', 'Tech', 'News', 'Motivation', 'Cricket'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedCategory === cat
-                      ? 'bg-white text-black'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedCategory === cat.name
-                      ? 'bg-white text-black'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="px-4 md:px-6 lg:px-8 mt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-10">
