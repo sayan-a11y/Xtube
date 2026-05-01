@@ -48,8 +48,8 @@ function AdminLoginModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="relative w-full max-w-md mx-4 bg-[#111827]/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-[#ff2d2d]/10 p-8">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000]/80 backdrop-blur-md">
+      <div className="relative w-full max-w-md mx-4 bg-[#0f0f0f] rounded-2xl border border-white/5 shadow-[0_0_80px_rgba(255,0,0,0.15)] p-10 overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-[#ff2d2d]/20 via-transparent to-[#ff2d2d]/10 pointer-events-none" />
 
@@ -146,9 +146,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-white/10">
-        <Play className="w-6 h-6 text-[#ff2d2d] fill-[#ff2d2d]" />
-        <span className="text-xl font-bold text-[#ff2d2d]">Xtube</span>
+      <div className="flex items-center gap-2 px-6 py-8 border-b border-white/5">
+        <div className="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff0000]/20">
+          X
+        </div>
+        <span className="text-xl font-bold text-white tracking-tight">tube</span>
         <span className="text-xs text-gray-500 ml-1 bg-white/5 px-2 py-0.5 rounded">Admin</span>
       </div>
 
@@ -258,7 +260,7 @@ function DashboardTab() {
           return (
             <div
               key={card.label}
-              className="bg-gradient-to-br from-[#111827] to-[#1a1f2e] border border-white/5 rounded-xl p-6 hover:border-white/10 transition-all group"
+              className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-6 hover:border-[#ff0000]/30 transition-all group shadow-xl"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-gray-400 text-sm">{card.label}</span>
