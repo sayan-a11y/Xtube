@@ -467,6 +467,13 @@ export default function PlayerView() {
     }
   }, [])
 
+  const handleBack = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {})
+    }
+    goHome()
+  }, [goHome])
+
   useEffect(() => {
     const onFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -823,19 +830,22 @@ export default function PlayerView() {
 
               {/* ── Controls Overlay ───────────────────────────────────────── */}
               <div
-                className="absolute inset-0 transition-opacity duration-300 pointer-events-none"
+                className="absolute inset-0 transition-opacity duration-300 pointer-events-none z-40"
                 style={{ opacity: showControls ? 1 : 0 }}
               >
                 {/* Top Bar - Back button */}
                 <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-4 pointer-events-auto">
-                  <button
-                    onClick={goHome}
-                    className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
-                    aria-label="Back to home"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                    <span className="text-sm font-medium">Back</span>
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBack();
+                      }}
+                      className="flex items-center gap-2 text-white/90 hover:text-white transition-colors relative z-[100] pointer-events-auto p-2 -m-2"
+                      aria-label="Back to home"
+                    >
+                      <ChevronLeft className="w-7 h-7" />
+                      <span className="text-base font-bold">Back</span>
+                    </button>
                 </div>
 
                 {/* Bottom Controls - Hybrid Modern UI */}
