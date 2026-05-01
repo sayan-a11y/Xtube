@@ -149,7 +149,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] text-[#1f2937]">
+    <div className="min-h-screen bg-gradient-to-br from-[#ff2d2d] to-[#ff3c1a] text-[#1f2937] pb-20">
       <Navbar />
 
       {/* Admin Login Modal */}
@@ -205,16 +205,16 @@ export default function Home() {
       ) : currentView === 'player' ? (
         <PlayerView />
       ) : (
-        <main className="pt-20 pb-10">
-          {/* Category Tabs */}
-          <div className="sticky top-16 z-30 bg-[#f3f4f6]/80 backdrop-blur-md px-4 md:px-8 lg:px-12 py-3 border-b border-gray-200 overflow-x-auto no-scrollbar">
-            <div className="max-w-[2000px] mx-auto flex items-center gap-3">
+        <main className="pt-20">
+          {/* Category Tabs - Floating Style */}
+          <div className="sticky top-16 z-30 px-4 md:px-8 lg:px-12 py-6 overflow-x-auto no-scrollbar">
+            <div className="max-w-[1100px] mx-auto flex items-center gap-3">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
                   selectedCategory === 'All'
-                    ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    ? 'bg-white text-[#ff2d2d]'
+                    : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
                 }`}
               >
                 All
@@ -223,23 +223,23 @@ export default function Home() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
                     selectedCategory === cat
-                      ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+                      ? 'bg-white text-[#ff2d2d]'
+                      : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${
                     selectedCategory === cat.name
-                      ? 'bg-[#6d9bc3] text-white shadow-lg shadow-[#6d9bc3]/30'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      ? 'bg-white text-[#ff2d2d]'
+                      : 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30'
                   }`}
                 >
                   {cat.name}
@@ -248,33 +248,35 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="max-w-[2400px] mx-auto px-4 md:px-8 lg:px-12 mt-4 md:mt-8">
-            {/* Unified Video Grid - OTT Style */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-6 md:gap-y-10">
-              {videosLoading ? (
-                Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="aspect-video w-full rounded-2xl bg-gray-200" />
-                    <div className="flex gap-3">
-                      <Skeleton className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-full bg-gray-200" />
-                        <Skeleton className="h-3 w-2/3 bg-gray-200" />
+          <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12 mt-4 md:mt-8">
+            {/* White Card Grid container */}
+            <div className="bg-white rounded-[20px] p-6 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+                {videosLoading ? (
+                  Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="aspect-video w-full rounded-2xl bg-gray-200" />
+                      <div className="flex gap-3">
+                        <Skeleton className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-full bg-gray-200" />
+                          <Skeleton className="h-3 w-2/3 bg-gray-200" />
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : videos.length > 0 ? (
+                  videos.map((v) => (
+                    <VideoCard key={v.id} video={v} />
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
+                    <Film className="w-20 h-20 mb-4 text-gray-400" />
+                    <h3 className="text-xl font-bold text-gray-600">No Videos Found</h3>
+                    <p className="text-sm text-gray-400">Try another category or search term.</p>
                   </div>
-                ))
-              ) : videos.length > 0 ? (
-                videos.map((v) => (
-                  <VideoCard key={v.id} video={v} />
-                ))
-              ) : (
-                <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
-                  <Film className="w-20 h-20 mb-4 text-gray-400" />
-                  <h3 className="text-xl font-bold text-gray-600">No Videos Found</h3>
-                  <p className="text-sm text-gray-400">Try another category or search term.</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
@@ -282,14 +284,14 @@ export default function Home() {
           <footer className="mt-20 border-t border-gray-200 px-4 md:px-12 py-12 bg-white">
             <div className="max-w-[2000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#6d9bc3] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
+                <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-bold text-white italic">X</div>
                 <span className="text-xl font-bold text-gray-900 tracking-tight">tube</span>
               </div>
-              <div className="flex items-center gap-8 text-gray-500 text-sm font-medium">
-                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Privacy</span>
-                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Terms</span>
-                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Contact</span>
-                <span className="hover:text-[#6d9bc3] cursor-pointer transition-colors">Advertise</span>
+              <div className="flex items-center gap-8 text-[#9ca3af] text-sm font-medium">
+                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Privacy</span>
+                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Terms</span>
+                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Contact</span>
+                <span className="hover:text-[#ff2d2d] cursor-pointer transition-colors">Advertise</span>
               </div>
               <p className="text-gray-400 text-xs">
                 © 2026 Xtube Platform. All rights reserved.

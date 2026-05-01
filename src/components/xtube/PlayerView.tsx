@@ -18,6 +18,7 @@ import {
   Settings,
   SkipForward,
   Loader2,
+  MoreVertical,
 } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -675,15 +676,15 @@ export default function PlayerView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#f3f4f6] pt-16 md:pt-20">
-      <div className="max-w-[2000px] mx-auto px-0 md:px-6 lg:px-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#ff2d2d] to-[#ff3c1a] pt-24 pb-20 px-4">
+      <div className="max-w-[1100px] mx-auto bg-white rounded-[20px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-0">
           {/* ── Main Content ──────────────────────────────────────────────── */}
-          <div className="flex-1 min-w-0">
+          <div className="p-4 md:p-8">
             {/* ── Player Area ──────────────────────────────────────────────── */}
             <div
               ref={playerContainerRef}
-              className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden group cursor-none shadow-2xl"
+              className="relative w-full aspect-video bg-[#0f172a] rounded-[16px] overflow-hidden group cursor-none"
               onMouseMove={resetControlsTimeout}
               onTouchStart={resetControlsTimeout}
               onMouseLeave={() => {
@@ -767,7 +768,7 @@ export default function PlayerView() {
                 </div>
               )}
 
-              {/* Big Play Button (when paused) */}
+              {/* Big Play Button (when paused) - YouTube Hybrid Style */}
               {!isPlaying && !isBuffering && (
                 <div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -776,7 +777,7 @@ export default function PlayerView() {
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-24 h-24 rounded-full border-2 border-white/80 flex items-center justify-center backdrop-blur-[2px] shadow-2xl"
+                    className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm border border-white/20"
                   >
                     <Play className="w-10 h-10 text-white fill-white ml-2" />
                   </motion.div>
@@ -828,37 +829,31 @@ export default function PlayerView() {
                   </button>
                 </div>
 
-                {/* Bottom Controls - Solid Bar Style matching image */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#272727]/90 backdrop-blur-md px-6 py-4 pointer-events-auto border-t border-white/5">
-                  {/* Seek Bar (Integrated) */}
+                {/* Bottom Controls - Hybrid Modern UI */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md px-6 py-3 pointer-events-auto border-t border-white/10">
+                  {/* Seek Bar */}
                   <div
                     ref={seekRef}
-                    className="absolute top-0 left-0 right-0 h-1 bg-white/10 cursor-pointer group/seek"
+                    className="absolute top-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/seek"
                     onClick={handleSeekClick}
                   >
-                    <div className="h-full bg-[#6d9bc3] transition-none" style={{ width: `${seekProgress}%` }}>
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover/seek:opacity-100 shadow-xl" />
+                    <div className="h-full bg-[#ff2d2d] transition-none relative" style={{ width: `${seekProgress}%` }}>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff2d2d] rounded-full scale-0 group-hover/seek:scale-100 transition-transform shadow-lg" />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mt-2.5">
                     <div className="flex items-center gap-6">
-                      <button onClick={togglePlay} className="text-white hover:text-[#6d9bc3] transition-colors">
+                      <button onClick={togglePlay} className="text-white hover:text-[#ff2d2d] transition-colors">
                         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
                       </button>
-                      <SkipForward className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={() => handleSeek(10)} />
-                      <span className="text-white/90 text-sm font-medium tabular-nums">
+                      <VolumeIcon className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" onClick={toggleMute} />
+                      <span className="text-white/80 text-xs font-bold tracking-tight">
                         {formatTime(currentTime)} / {formatTime(duration)}
                       </span>
                     </div>
                     
                     <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-3 group/vol">
-                        <VolumeIcon className="w-5 h-5 text-white cursor-pointer" onClick={toggleMute} />
-                        <div className="w-0 group-hover:w-20 transition-all duration-300 h-1 bg-white/20 rounded-full overflow-hidden">
-                          <div className="h-full bg-white" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-                        </div>
-                      </div>
                       <Settings className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowQualityMenu(!showQualityMenu)} />
                       <Maximize className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" onClick={toggleFullscreen} />
                     </div>
@@ -868,69 +863,76 @@ export default function PlayerView() {
             </div>
 
             {/* ── Video Info Section ────────────────────────────────────────── */}
-            <div className="mt-4 md:mt-8 px-4 md:px-0">
-              <h1 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">
+            <div className="mt-8">
+              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
                 {video.title}
               </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mt-4 md:mt-6 pb-6 border-b border-gray-200">
-                {/* Channel / Subscribe section */}
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-lg md:text-xl border-2 border-white shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-6 pb-8 border-b border-gray-100">
+                {/* Channel Section */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[#6b7280] text-xl border-2 border-white shadow-sm">
                     {video.category[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-gray-900 font-bold text-sm md:text-base">XTube Studio</h3>
-                    <p className="text-gray-500 text-[10px] md:text-sm">1.2M subscribers</p>
+                    <h3 className="text-gray-900 font-bold text-base">XTube Studio</h3>
+                    <p className="text-[#9ca3af] text-xs font-medium">1.2M subscribers</p>
                   </div>
-                  <button className="ml-auto md:ml-4 px-6 md:px-8 py-2 bg-[#6d9bc3] text-white font-bold rounded-full text-xs md:text-sm hover:brightness-110 shadow-lg shadow-[#6d9bc3]/20 transition-all">
+                  <button className="ml-4 px-8 py-2.5 bg-[#ff2d2d] text-white font-bold rounded-full text-sm hover:brightness-110 shadow-lg shadow-[#ff2d2d]/20 transition-all uppercase tracking-wider">
                     Subscribe
                   </button>
                 </div>
 
-                {/* Action buttons - Mobile Scrollable */}
-                <div className="flex items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 py-1">
-                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
-                    <ThumbsUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <span>{likeCount.toLocaleString()}</span>
+                {/* Action icons - Minimal Grey style */}
+                <div className="flex items-center gap-5">
+                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                    <ThumbsUp className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase">{likeCount.toLocaleString()}</span>
                   </button>
-                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
-                    <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <span>Share</span>
+                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                    <Share2 className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase">Share</span>
                   </button>
-                  <button className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 md:px-6 py-2 rounded-full transition-all shadow-sm font-semibold text-xs md:text-sm">
-                    <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <span>Save</span>
+                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                    <Clock className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase">Save</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-1 text-[#6b7280] hover:text-[#ff2d2d] transition-colors">
+                    <MoreVertical className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase">More</span>
                   </button>
                 </div>
               </div>
 
-              {/* Description Box */}
-              <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md transition-all cursor-pointer group" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
-                <div className="flex items-center gap-3 text-gray-900 font-bold text-sm mb-3">
-                  <span className="bg-gray-100 px-3 py-1 rounded-full">{formatViews(video.views)}</span>
-                  <span className="text-gray-400">{formatDate(video.createdAt)}</span>
-                </div>
-                <div className={`text-gray-600 text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
-                  {video.description || "No description available for this video."}
-                </div>
-                <button className="text-[#6d9bc3] text-sm font-bold mt-4 hover:underline">
-                  {descriptionExpanded ? 'Show less' : 'Show more'}
+              {/* Description placeholders as grey lines */}
+              <div className="mt-8 space-y-3">
+                <div className="h-3 w-full bg-gray-100 rounded-full" />
+                <div className="h-3 w-4/5 bg-gray-100 rounded-full" />
+                <button 
+                  className="text-[#ff2d2d] text-xs font-bold uppercase tracking-widest mt-4 hover:underline"
+                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                >
+                  {descriptionExpanded ? 'Show less' : 'Read more'}
                 </button>
+                {descriptionExpanded && (
+                  <div className="text-[#6b7280] text-sm mt-4 leading-relaxed p-4 bg-gray-50 rounded-xl">
+                    {video.description || "Modern YouTube style experience."}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* ── Right Sidebar ──────────────────────────────────────────────── */}
-          <div className="w-full mt-10 lg:mt-0 px-4 md:px-0">
+          <div className="w-full p-4 md:p-8 bg-gray-50/50 border-l border-gray-100">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-gray-900 font-bold text-lg">Recommended</h3>
+              <h3 className="text-gray-900 font-bold text-lg">Next Video</h3>
               <div className="flex items-center gap-3">
-                <span className="text-gray-500 text-xs font-medium">Autoplay</span>
+                <span className="text-[#9ca3af] text-[10px] font-black uppercase tracking-tighter">Autoplay</span>
                 <Switch
                   checked={autoplay}
                   onCheckedChange={setAutoplay}
-                  className="data-[state=checked]:bg-[#6d9bc3]"
+                  className="data-[state=checked]:bg-[#ff2d2d]"
                 />
               </div>
             </div>
@@ -969,7 +971,7 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
     <div
       className={`flex gap-4 p-2 rounded-2xl cursor-pointer transition-all duration-300 ${
         isCurrent
-          ? 'bg-white shadow-lg border border-gray-100 ring-2 ring-[#6d9bc3]/20'
+          ? 'bg-white shadow-lg border border-gray-100 ring-2 ring-[#ff2d2d]/20'
           : 'hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100'
       }`}
       onClick={onClick}
@@ -990,8 +992,8 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
           {video.duration}
         </div>
         {isCurrent && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#6d9bc3]/20 backdrop-blur-[1px]">
-            <div className="w-10 h-10 rounded-full bg-[#6d9bc3] flex items-center justify-center shadow-xl">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#ff2d2d]/20 backdrop-blur-[1px]">
+            <div className="w-10 h-10 rounded-full bg-[#ff2d2d] flex items-center justify-center shadow-xl">
               <Play className="w-5 h-5 text-white fill-white ml-0.5" />
             </div>
           </div>
@@ -1000,7 +1002,7 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
 
       {/* Info */}
       <div className="flex-1 min-w-0 py-1 pr-2">
-        <h4 className="text-[13px] md:text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#6d9bc3] transition-colors">
+        <h4 className="text-[13px] md:text-sm font-bold text-gray-900 line-clamp-2 leading-tight hover:text-[#ff2d2d] transition-colors">
           {video.title}
         </h4>
         <div className="mt-1 md:mt-2 space-y-0.5 md:space-y-1">

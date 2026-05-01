@@ -90,7 +90,7 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
-      className="group cursor-pointer flex flex-col gap-3"
+      className="group cursor-pointer flex flex-col gap-3 bg-white rounded-[20px] p-4 shadow-sm hover:shadow-xl transition-all duration-300"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
@@ -152,15 +152,15 @@ export default function VideoCard({ video }: VideoCardProps) {
 
         {/* Text details */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[#6d9bc3] transition-colors mb-1">
+          <h3 className="text-[14px] font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[#ff2d2d] transition-colors mb-1">
             {video.title}
           </h3>
-          <div className="flex flex-col text-[13px] text-gray-500 font-bold">
+          <div className="flex flex-col text-[11px] text-[#9ca3af] font-bold uppercase tracking-wider">
             <div className="flex items-center gap-1">
               <span>XTube Studio</span>
-              <CheckCircle2 className="w-3 h-3 text-[#6d9bc3]" />
+              <CheckCircle2 className="w-3 h-3 text-[#ff2d2d]" />
             </div>
-            <div className="flex items-center gap-1.5 text-gray-400">
+            <div className="flex items-center gap-1.5 mt-1">
               <span>{formatViews(video.views)}</span>
               <span className="w-1 h-1 rounded-full bg-gray-200" />
               <span>{new Date(video.createdAt).toLocaleDateString()}</span>
