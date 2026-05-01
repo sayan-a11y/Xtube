@@ -1077,12 +1077,26 @@ function UploadTab() {
                   Quality Pipeline
                </h3>
                <div className="grid grid-cols-3 gap-3">
-                  {['360p', '480p', '720p', '1080p', '2K', '4K'].map((q) => (
-                    <div key={q} className="p-3 bg-white/5 border border-white/5 rounded-xl flex flex-col items-center gap-2">
-                       <span className="text-[10px] font-black text-gray-500">{q}</span>
-                       <span className="text-[10px] font-bold text-white/40">Pending</span>
-                    </div>
-                  ))}
+                  {['360p', '480p', '720p', '1080p', '2K', '4K'].map((q, i) => {
+                    let qStatus = 'Pending'
+                    let qColor = 'text-gray-500 bg-white/5'
+                    if (uploadProgress === 100) {
+                      const currentQIdx = Math.floor((Date.now() / 2000) % 10)
+                      if (i < currentQIdx) {
+                        qStatus = 'Ready'
+                        qColor = 'text-green-500 bg-green-500/10'
+                      } else if (i === currentQIdx) {
+                        qStatus = 'Processing'
+                        qColor = 'text-blue-500 bg-blue-500/10 animate-pulse'
+                      }
+                    }
+                    return (
+                      <div key={q} className={`p-3 rounded-2xl border border-white/5 flex flex-col gap-1 transition-all ${qColor}`}>
+                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{q}</span>
+                         <span className="text-xs font-bold">{qStatus}</span>
+                      </div>
+                    )
+                  })}
                </div>
                <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10 flex items-start gap-3">
                   <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
