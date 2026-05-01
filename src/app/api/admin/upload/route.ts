@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         duration: '0:00',
         size: buffer.length,
         status: 'processing'
-      },
+      } as any,
     })
 
     // 4. Trigger HLS Processing (Background)

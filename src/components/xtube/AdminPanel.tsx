@@ -582,6 +582,12 @@ function VideosTab() {
                  {video.status === 'failed' && (
                    <span className="px-2 py-0.5 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-black">Failed</span>
                  )}
+                 {video.status === 'ready' && (
+                   <div className="flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded-lg bg-green-500/10 text-green-500 text-[10px] font-black">Ready</span>
+                      <span className="px-2 py-0.5 rounded-lg bg-[#ff2d2d]/20 text-[#ff2d2d] text-[10px] font-black border border-[#ff2d2d]/30">4K Ready</span>
+                   </div>
+                 )}
               </div>
 
               <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">

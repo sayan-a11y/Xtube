@@ -6,6 +6,7 @@ import HeroSection from '@/components/xtube/HeroSection'
 import ContentRow from '@/components/xtube/ContentRow'
 import PlayerView from '@/components/xtube/PlayerView'
 import AdminPanel from '@/components/xtube/AdminPanel'
+import AgeGate from '@/components/xtube/AgeGate'
 import { Flame, Clock, Star, TrendingUp, Film, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { useEffect, useMemo, useCallback, useState } from 'react'
 import VideoCard from '@/components/xtube/VideoCard'
@@ -140,6 +141,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
+      <AgeGate />
       <Navbar />
 
       {/* Admin Login Modal */}

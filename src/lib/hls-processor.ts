@@ -24,6 +24,20 @@ export async function processVideoHLS(videoId: string, inputBuffer: Buffer) {
     await mkdir(tempDir, { recursive: true });
     await writeFile(inputPath, inputBuffer);
 
+    // 0. Generate Thumbnail & Preview Sprites
+    const thumbnailPath = join(tempDir, 'thumbnail.jpg');
+    console.log('Generating thumbnail...');
+    await execAsync(`ffmpeg -i "${inputPath}" -ss 00:00:01 -vframes 1 -q:v 2 "${thumbnailPath}"`);
+    const thumbnailBuffer = await readFile(thumbnailPath);
+    const thumbnailUrl = await uploadToR2(thumbnailBuffer, `videos/${videoId}/thumbnail.jpg`, 'image/jpeg');
+
+    // Generate Preview Sprite (simple one for now)
+    // In production, you'd loop and create a sheet, here we create a mid-frame preview
+    const previewPath = join(tempDir, 'preview.jpg');
+    await execAsync(`ffmpeg -i "${inputPath}" -ss 00:00:05 -vframes 1 -s 320x180 -q:v 5 "${previewPath}"`);
+    const previewBuffer = await readFile(previewPath);
+    const previewUrl = await uploadToR2(previewBuffer, `videos/${videoId}/preview.jpg`, 'image/jpeg');
+
     // 1. Generate Variants
     const masterPlaylistLines = ['#EXTM3U', '#EXT-X-VERSION:3'];
 
@@ -74,8 +88,9 @@ export async function processVideoHLS(videoId: string, inputBuffer: Buffer) {
       where: { id: videoId },
       data: {
         hlsPath: masterPublicUrl,
+        thumbnail: thumbnailUrl,
         status: 'ready'
-      }
+      } as any
     });
 
     console.log(`HLS processing complete for ${videoId}`);
@@ -83,7 +98,7 @@ export async function processVideoHLS(videoId: string, inputBuffer: Buffer) {
     console.error(`HLS processing failed for ${videoId}:`, error);
     await db.video.update({
       where: { id: videoId },
-      data: { status: 'failed' }
+      data: { status: 'failed' } as any
     });
   } finally {
     try {
