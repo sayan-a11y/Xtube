@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     
     // 2. Generate thumbnail and metadata with ffmpeg
     let duration = '0:00'
+    let thumbnailCaptured = false
     try {
       const { stdout: durOut } = await execAsync(
         `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`
@@ -62,24 +63,20 @@ export async function POST(request: NextRequest) {
       await execAsync(
         `ffmpeg -y -ss ${seekTime} -i "${videoPath}" -vframes 1 -q:v 2 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" "${thumbnailPath}"`
       )
+      thumbnailCaptured = true
     } catch (err) {
-      console.error('Thumbnail/duration generation failed:', err)
-      try {
-        await execAsync(
-          `ffmpeg -y -i "${videoPath}" -vframes 1 -q:v 2 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" "${thumbnailPath}"`
-        )
-      } catch (e) {
-        console.error('Fallback thumbnail failed:', e)
-      }
+      console.warn('FFmpeg/FFprobe not available or failed. Skipping metadata generation:', err)
     }
 
-    // 3. Upload thumbnail to R2
+    // 3. Upload thumbnail to R2 (if captured)
     let thumbnailUrl = ''
-    try {
-      const thumbBuffer = await readFile(thumbnailPath)
-      thumbnailUrl = await uploadToR2(thumbBuffer, `thumbnails/${videoId}.jpg`, 'image/jpeg')
-    } catch (err) {
-      console.error('Thumbnail upload failed:', err)
+    if (thumbnailCaptured) {
+      try {
+        const thumbBuffer = await readFile(thumbnailPath)
+        thumbnailUrl = await uploadToR2(thumbBuffer, `thumbnails/${videoId}.jpg`, 'image/jpeg')
+      } catch (err) {
+        console.error('Thumbnail upload failed:', err)
+      }
     }
 
     // 4. Generate and upload HLS stream
@@ -102,7 +99,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (err) {
-      console.error('HLS conversion/upload failed:', err)
+      console.warn('HLS conversion failed or skipped (common on Vercel):', err)
     }
 
     // 5. Save to database
@@ -113,7 +110,7 @@ export async function POST(request: NextRequest) {
         description,
         category,
         filePath: videoR2Url,
-        thumbnail: thumbnailUrl,
+        thumbnail: thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Thumbnail',
         hlsPath: hlsR2Url,
         duration,
         size: buffer.length,

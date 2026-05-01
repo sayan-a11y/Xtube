@@ -3,34 +3,27 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const totalVideos = await db.video.count()
-    const totalCategories = await db.category.count()
-    
-    const viewsResult = await db.video.aggregate({
-      _sum: { views: true },
-    })
+    const [
+      totalVideos,
+      totalCategories,
+      viewsResult,
+      likesResult,
+      sizeResult,
+      recentVideos,
+      categoryStats
+    ] = await Promise.all([
+      db.video.count(),
+      db.category.count(),
+      db.video.aggregate({ _sum: { views: true } }),
+      db.video.aggregate({ _sum: { likes: true } }),
+      db.video.aggregate({ _sum: { size: true } }),
+      db.video.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
+      db.video.groupBy({ by: ['category'], _count: { category: true } }),
+    ])
+
     const totalViews = viewsResult._sum.views || 0
-
-    const likesResult = await db.video.aggregate({
-      _sum: { likes: true },
-    })
     const totalLikes = likesResult._sum.likes || 0
-
-    // Calculate storage usage from database
-    const sizeResult = await db.video.aggregate({
-      _sum: { size: true },
-    })
     const storageUsed = sizeResult._sum.size || 0
-
-    const recentVideos = await db.video.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    })
-
-    const categoryStats = await db.video.groupBy({
-      by: ['category'],
-      _count: { category: true },
-    })
 
     return NextResponse.json({
       totalVideos,
