@@ -1127,6 +1127,10 @@ function UploadTab() {
   const handleFile = (file: File) => {
     if (file.type.startsWith('video/')) {
       setVideoFile(file)
+      // Automatically set title from file name (removing extension)
+      const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "")
+      setTitle(fileNameWithoutExt)
+      
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
     } else {
@@ -1178,11 +1182,15 @@ function UploadTab() {
           })
           
           if (finalRes.ok) {
-             console.log('[Admin] Video published successfully (R2 + Supabase Realtime)')
-             toast({ title: 'Success!', description: 'Video uploaded and processing.' })
-             setTitle(''); setDescription(''); setVideoFile(null); setPreviewUrl(null); setUploadProgress(0)
+            console.log('[Admin] Video published successfully (R2 + Supabase Realtime)')
+            toast({ title: 'Success!', description: 'Video uploaded and processing.' })
+            setTitle('')
+            setDescription('')
+            setVideoFile(null)
+            setPreviewUrl(null)
+            setUploadProgress(0)
           } else {
-             console.error('[Admin] Metadata finalization failed')
+            console.error('[Admin] Metadata finalization failed')
           }
         } else {
           console.error('[Admin] R2 upload failed with status:', xhr.status)
