@@ -253,15 +253,21 @@ export default function PlayerView() {
 
   // Quality Switching Logic
   useEffect(() => {
-    if (!hlsRef.current) return
+    const hls = hlsRef.current
+    const vid = videoRef.current
+    if (!hls || !vid) return
+
     if (selectedQuality === 'auto') {
-      hlsRef.current.currentLevel = -1
+      hls.currentLevel = -1
     } else {
-      const levelIndex = hlsRef.current.levels.findIndex(
-        (l) => l.height.toString() === selectedQuality
+      // Find the index that matches the height
+      const levelIndex = hls.levels.findIndex(
+        (l) => l.height.toString() === selectedQuality || l.name === selectedQuality
       )
       if (levelIndex !== -1) {
-        hlsRef.current.currentLevel = levelIndex
+        hls.currentLevel = levelIndex
+        // For immediate effect on some browsers
+        hls.loadLevel = levelIndex
       }
     }
   }, [selectedQuality])
@@ -373,11 +379,14 @@ export default function PlayerView() {
     if (!vid) return
     if (vid.paused) {
       vid.play().catch(() => {})
+      // Force hide controls slightly faster on play
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current)
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 2000)
     } else {
       vid.pause()
+      setShowControls(true)
     }
-    resetControlsTimeout()
-  }, [resetControlsTimeout])
+  }, [])
 
   const handleSeek = useCallback((amount: number) => {
     const vid = videoRef.current
@@ -388,25 +397,40 @@ export default function PlayerView() {
     resetControlsTimeout()
   }, [resetControlsTimeout])
 
-  const handleVideoClick = (e: React.MouseEvent) => {
+  const handleVideoClick = (e: React.MouseEvent | React.TouchEvent) => {
     const now = Date.now()
     const DOUBLE_TAP_DELAY = 300
     const timeDiff = now - lastTapTimeRef.current
 
+    // Show controls on any tap/touch
+    resetControlsTimeout()
+
     if (timeDiff < DOUBLE_TAP_DELAY) {
       // Double tap detected
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const x = e.clientX - rect.left
+      let clientX = 0
+      if ('clientX' in e) {
+        clientX = e.clientX
+      } else if ('changedTouches' in e) {
+        clientX = e.changedTouches[0].clientX
+      }
+
+      const x = clientX - rect.left
       if (x < rect.width / 2) {
         handleSeek(-10)
       } else {
         handleSeek(10)
       }
-      lastTapTimeRef.current = 0 // Reset
+      lastTapTimeRef.current = 0 
     } else {
       // Single tap
       lastTapTimeRef.current = now
-      togglePlay()
+      // On mobile, first tap shows controls, second tap (if controls visible) toggles play
+      if (!showControls) {
+        setShowControls(true)
+      } else {
+        togglePlay()
+      }
     }
   }
 
@@ -416,12 +440,20 @@ export default function PlayerView() {
 
   const toggleFullscreen = useCallback(() => {
     const container = playerContainerRef.current
-    if (!container) return
+    const video = videoRef.current
+    if (!container || !video) return
 
     if (!document.fullscreenElement) {
-      container.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {})
+      if (container.requestFullscreen) {
+        container.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {})
+      } else if ((video as any).webkitEnterFullscreen) {
+        // iOS Safari fix
+        (video as any).webkitEnterFullscreen()
+      }
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {})
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {})
+      }
     }
   }, [])
 
@@ -653,6 +685,7 @@ export default function PlayerView() {
               ref={playerContainerRef}
               className="relative w-full aspect-video bg-black rounded-xl overflow-hidden group cursor-none select-none"
               onMouseMove={resetControlsTimeout}
+              onTouchStart={resetControlsTimeout}
               onMouseLeave={() => {
                 if (isPlaying) setShowControls(false)
               }}
