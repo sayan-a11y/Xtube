@@ -31,10 +31,207 @@ const VIEW_DATA = [
 ]
 
 const USER_ACTIVITY_DATA = [
-  { name: 'Desktop', value: 400 },
-  { name: 'Mobile', value: 300 },
-  { name: 'Tablet', value: 100 },
+  { name: 'Desktop', value: 4500 },
+  { name: 'Tablet', value: 3200 },
+  { name: 'Mobile', value: 2100 },
+  { name: 'Others', value: 800 },
 ]
+
+function AnalyticsTab() {
+  return (
+    <div className="space-y-8 pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Deep Analytics</h2>
+           <p className="text-sm text-gray-500">Advanced audience and performance metrics</p>
+        </div>
+        <div className="flex items-center gap-4 bg-white/5 p-1 rounded-xl border border-white/5">
+           <button className="px-6 py-2 bg-[#ff2d2d] rounded-lg text-sm font-bold shadow-lg shadow-[#ff2d2d]/20 transition-all">Export Report</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+           <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h3 className="text-xl font-bold text-white mb-8">Audience Growth</h3>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={VIEW_DATA}>
+                    <defs>
+                      <linearGradient id="colorAudience" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                    <XAxis dataKey="name" stroke="#ffffff20" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#ffffff20" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#121826', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                    <Area type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorAudience)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+                 <h3 className="text-lg font-bold text-white mb-6">Device Distribution</h3>
+                 <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                       <PieChart>
+                          <Pie data={USER_ACTIVITY_DATA} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                             {USER_ACTIVITY_DATA.map((entry, index) => (
+                               <Cell key={`cell-${index}`} fill={['#ff2d2d', '#3b82f6', '#10b981', '#f59e0b'][index % 4]} />
+                             ))}
+                          </Pie>
+                          <Tooltip />
+                       </PieChart>
+                    </ResponsiveContainer>
+                 </div>
+                 <div className="flex justify-center gap-4 mt-4">
+                    {USER_ACTIVITY_DATA.map((entry, i) => (
+                       <div key={entry.name} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#ff2d2d', '#3b82f6', '#10b981', '#f59e0b'][i % 4] }} />
+                          <span className="text-[10px] text-gray-400 font-bold uppercase">{entry.name}</span>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+              
+              <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+                 <h3 className="text-lg font-bold text-white mb-6">Average Watch Time</h3>
+                 <div className="flex flex-col items-center justify-center h-[200px]">
+                    <div className="text-5xl font-black text-white tracking-tighter mb-2">08:42</div>
+                    <div className="text-sm font-bold text-green-500 bg-green-500/10 px-3 py-1 rounded-full">+24% vs last week</div>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        <div className="space-y-8">
+           <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h3 className="text-lg font-bold text-white mb-6">Top Traffic Sources</h3>
+              <div className="space-y-6">
+                 {[
+                   { name: 'Direct Search', value: '45%', color: '#ff2d2d' },
+                   { name: 'External Links', value: '32%', color: '#3b82f6' },
+                   { name: 'Social Media', value: '18%', color: '#10b981' },
+                   { name: 'Others', value: '5%', color: '#f59e0b' }
+                 ].map((source) => (
+                    <div key={source.name} className="space-y-2">
+                       <div className="flex justify-between text-xs font-bold uppercase">
+                          <span className="text-gray-400">{source.name}</span>
+                          <span className="text-white">{source.value}</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: source.value }} className="h-full rounded-full" style={{ backgroundColor: source.color }} />
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+           
+           <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h4 className="text-sm font-black text-white uppercase tracking-widest mb-4">Live Engagement</h4>
+              <div className="space-y-4">
+                 {[1, 2, 3].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center overflow-hidden">
+                          <img src={`https://i.pravatar.cc/100?u=${i}`} className="w-full h-full object-cover" />
+                       </div>
+                       <div className="flex-1">
+                          <p className="text-xs font-bold text-white">New user watching 4K stream</p>
+                          <p className="text-[10px] text-gray-500">Just now • India</p>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CommentsTab() {
+  const [comments, setComments] = useState([
+    { id: '1', user: 'Sayan Ghosh', text: 'This 4K quality is incredible! Fast buffering too.', video: 'Xtube Cinematic', date: '2m ago', avatar: 'https://i.pravatar.cc/100?u=1', status: 'pending' },
+    { id: '2', user: 'Rahul Dev', text: 'Love the new glassmorphism UI. Great work!', video: 'Tech Review', date: '15m ago', avatar: 'https://i.pravatar.cc/100?u=2', status: 'approved' },
+    { id: '3', user: 'Anjali Sharma', text: 'The player double tap feature is so handy.', video: 'Dance Vlog', date: '1h ago', avatar: 'https://i.pravatar.cc/100?u=3', status: 'pending' },
+    { id: '4', user: 'Vikram Singh', text: 'Amazing platform layout.', video: 'Xtube Cinematic', date: '3h ago', avatar: 'https://i.pravatar.cc/100?u=4', status: 'approved' }
+  ])
+
+  return (
+    <div className="space-y-8 pb-20">
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Community Moderation</h2>
+           <p className="text-sm text-gray-500">Manage interaction across all your videos</p>
+        </div>
+        <div className="flex items-center gap-3">
+           <button className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-xs font-bold transition-all">Pending (12)</button>
+           <button className="px-5 py-2 bg-[#ff2d2d] rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#ff2d2d]/20">Auto-Moderation: ON</button>
+        </div>
+      </div>
+
+      <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+         <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+               <thead>
+                  <tr className="border-b border-white/5 bg-white/5">
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">User</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Comment</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Video</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Date</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Status</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Actions</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-white/5">
+                  {comments.map((comment) => (
+                     <tr key={comment.id} className="group hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4">
+                           <div className="flex items-center gap-3">
+                              <img src={comment.avatar} className="w-8 h-8 rounded-full border border-white/10" />
+                              <span className="text-sm font-bold text-white">{comment.user}</span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 max-w-md">
+                           <p className="text-sm text-gray-400 line-clamp-2">{comment.text}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="text-xs font-bold text-[#ff2d2d] hover:underline cursor-pointer">{comment.video}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="text-xs text-gray-500">{comment.date}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${comment.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                              {comment.status}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="p-2 hover:bg-green-500/10 text-gray-500 hover:text-green-500 rounded-xl transition-all"><CheckCircle2 className="w-4 h-4" /></button>
+                              <button className="p-2 hover:bg-[#ff2d2d]/10 text-gray-500 hover:text-[#ff2d2d] rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                           </div>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+         <div className="p-6 bg-white/5 border-t border-white/5 flex items-center justify-between">
+            <span className="text-xs text-gray-500 font-bold">Showing 4 of 28 comments</span>
+            <div className="flex gap-2">
+               <button className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronLeft className="w-4 h-4" /></button>
+               <button className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronRight className="w-4 h-4" /></button>
+            </div>
+         </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Format Helpers ──────────────────────────────────────────────────────────
 
@@ -196,13 +393,8 @@ export default function AdminPanel() {
               {adminTab === 'videos' && <VideosTab />}
               {adminTab === 'categories' && <CategoriesTab />}
               {adminTab === 'upload' && <UploadTab />}
-              {['users', 'analytics', 'comments', 'settings'].includes(adminTab) && (
-                <div className="flex flex-col items-center justify-center py-40 opacity-30">
-                  <BarChart3 className="w-20 h-20 mb-4" />
-                  <h3 className="text-xl font-bold">Work in Progress</h3>
-                  <p className="text-sm">The {adminTab} module will be available in the next update.</p>
-                </div>
-              )}
+              {adminTab === 'analytics' && <AnalyticsTab />}
+              {adminTab === 'comments' && <CommentsTab />}
             </motion.div>
           </AnimatePresence>
         </div>
