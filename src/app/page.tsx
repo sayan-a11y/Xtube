@@ -12,23 +12,21 @@ import VideoCard from '@/components/xtube/VideoCard'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Home() {
-  const {
-    currentView,
-    selectedCategory,
-    setSelectedCategory,
-    videos,
-    setVideos,
-    categories,
-    setCategories,
-    videosLoading,
-    setVideosLoading,
-    searchQuery,
-    isAdmin,
-    showAdminLogin,
-    setShowAdminLogin,
-    setIsAdmin,
-    setAdminToken,
-  } = useAppStore()
+  const currentView = useAppStore(s => s.currentView)
+  const selectedCategory = useAppStore(s => s.selectedCategory)
+  const setSelectedCategory = useAppStore(s => s.setSelectedCategory)
+  const videos = useAppStore(s => s.videos)
+  const setVideos = useAppStore(s => s.setVideos)
+  const categories = useAppStore(s => s.categories)
+  const setCategories = useAppStore(s => s.setCategories)
+  const videosLoading = useAppStore(s => s.videosLoading)
+  const setVideosLoading = useAppStore(s => s.setVideosLoading)
+  const searchQuery = useAppStore(s => s.searchQuery)
+  const isAdmin = useAppStore(s => s.isAdmin)
+  const showAdminLogin = useAppStore(s => s.showAdminLogin)
+  const setShowAdminLogin = useAppStore(s => s.setShowAdminLogin)
+  const setIsAdmin = useAppStore(s => s.setIsAdmin)
+  const setAdminToken = useAppStore(s => s.setAdminToken)
 
   const [mounted, setMounted] = useState(false)
 

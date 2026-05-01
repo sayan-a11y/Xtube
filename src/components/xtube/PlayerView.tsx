@@ -218,6 +218,11 @@ export default function PlayerView() {
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
+        backBufferLength: 60,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 600,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingMaxRetry: 3,
       })
       hlsRef.current = hls
       hls.loadSource(video.hlsPath)
@@ -270,14 +275,14 @@ export default function PlayerView() {
     if (selectedQuality === 'auto') {
       hls.currentLevel = -1
     } else {
-      // Find the index that matches the height
       const levelIndex = hls.levels.findIndex(
         (l) => l.height.toString() === selectedQuality || l.name === selectedQuality
       )
       if (levelIndex !== -1) {
+        // Immediate switch
         hls.currentLevel = levelIndex
-        // For immediate effect on some browsers
         hls.loadLevel = levelIndex
+        hls.nextLevel = levelIndex
       }
     }
   }, [selectedQuality])
