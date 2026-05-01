@@ -1,111 +1,43 @@
 'use client'
 
 import { useAppStore, VideoData, CategoryData, AdminStats } from '@/store/useAppStore'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
-  BarChart3, Upload, Film, FolderOpen, Settings, LogOut, Menu, X,
-  Eye, Heart, HardDrive, Play, Trash2, Edit3, Search, Plus, Check,
-  Lock, Info, ChevronRight, FileVideo, AlertTriangle
+  LayoutDashboard, Upload, Film, FolderOpen, Users, BarChart3, MessageSquare, Settings,
+  LogOut, Menu, X, Eye, Heart, HardDrive, Play, Trash2, Edit3, Search, Plus, Check,
+  Lock, Info, ChevronRight, FileVideo, AlertTriangle, Filter, MoreVertical,
+  CheckCircle2, Clock, Share2, ArrowUpRight, Download, Maximize2
 } from 'lucide-react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts'
 import { Progress } from '@/components/ui/progress'
 import { toast } from '@/hooks/use-toast'
 
-// ─── Admin Login Modal ───────────────────────────────────────────────────────
-function AdminLoginModal() {
-  const { setShowAdminLogin, setIsAdmin, setAdminToken, setCurrentView } = useAppStore()
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+// ─── Constants & Mock Data ───────────────────────────────────────────────────
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+const COLORS = ['#ff2d2d', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6']
 
-    try {
-      const res = await fetch('/api/admin/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      const data = await res.json()
+const VIEW_DATA = [
+  { name: 'Mon', views: 4000 },
+  { name: 'Tue', views: 3000 },
+  { name: 'Wed', views: 2000 },
+  { name: 'Thu', views: 2780 },
+  { name: 'Fri', views: 1890 },
+  { name: 'Sat', views: 2390 },
+  { name: 'Sun', views: 3490 },
+]
 
-      if (res.ok && data.success) {
-        setIsAdmin(true)
-        setAdminToken(data.token)
-        setShowAdminLogin(false)
-        setCurrentView('admin')
-      } else {
-        setError(data.error || 'Authentication failed')
-      }
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000]/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md mx-4 bg-[#0f0f0f] rounded-2xl border border-white/5 shadow-[0_0_80px_rgba(255,0,0,0.15)] p-10 overflow-hidden">
-        {/* Glow effect */}
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-[#ff2d2d]/20 via-transparent to-[#ff2d2d]/10 pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-[#ff2d2d]/10 flex items-center justify-center border border-[#ff2d2d]/20">
-              <Lock className="w-8 h-8 text-[#ff2d2d]" />
-            </div>
-          </div>
-
-          <h2 className="text-2xl font-bold text-white text-center mb-2">Admin Access</h2>
-          <p className="text-gray-400 text-center text-sm mb-6">Enter your admin password to continue</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError('') }}
-                placeholder="Enter password"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 focus:ring-1 focus:ring-[#ff2d2d]/30 transition-all"
-                autoFocus
-                disabled={loading}
-              />
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-[#ff2d2d] text-sm bg-[#ff2d2d]/10 rounded-lg px-3 py-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !password}
-              className="w-full bg-[#ff2d2d] hover:bg-[#e62626] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg py-3 font-medium transition-all cursor-pointer"
-            >
-              {loading ? 'Authenticating...' : 'Login'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowAdminLogin(false)}
-              className="w-full text-gray-400 hover:text-white text-sm py-2 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
+const USER_ACTIVITY_DATA = [
+  { name: 'Desktop', value: 400 },
+  { name: 'Mobile', value: 300 },
+  { name: 'Tablet', value: 100 },
+]
 
 // ─── Format Helpers ──────────────────────────────────────────────────────────
+
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -120,78 +52,169 @@ function formatNumber(num: number): string {
   return num.toString()
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
-  })
-}
+// ─── Main Admin Component ────────────────────────────────────────────────────
 
-// ─── Sidebar Navigation ──────────────────────────────────────────────────────
-const SIDEBAR_TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-  { id: 'upload', label: 'Upload Video', icon: Upload },
-  { id: 'videos', label: 'All Videos', icon: Film },
-  { id: 'categories', label: 'Categories', icon: FolderOpen },
-  { id: 'settings', label: 'Settings', icon: Settings },
-] as const
+export default function AdminPanel() {
+  const { isAdmin, showAdminLogin, logoutAdmin, adminTab, setAdminTab } = useAppStore()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [scrolled, setScrolled] = useState(false)
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
-  const { adminTab, setAdminTab, logoutAdmin } = useAppStore()
+  // Auto-close sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) setIsSidebarOpen(false)
+      else setIsSidebarOpen(true)
+    }
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
-  const handleTabClick = (tabId: string) => {
-    setAdminTab(tabId)
-    onNavigate?.()
-  }
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  if (!isAdmin) return null
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-8 border-b border-white/5">
-        <div className="w-8 h-8 bg-[#ff2d2d] rounded-lg flex items-center justify-center font-bold text-white italic text-lg shadow-lg shadow-[#ff2d2d]/20">
-          X
+    <div className="min-h-screen bg-[#0b0f1a] text-white flex overflow-hidden">
+      {/* Sidebar Overlay (Mobile) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isSidebarOpen ? 280 : 0, opacity: isSidebarOpen ? 1 : 0 }}
+        className="fixed lg:relative h-screen bg-[#121826]/80 backdrop-blur-2xl border-r border-white/10 z-50 flex flex-col overflow-hidden"
+      >
+        <div className="p-6 flex items-center justify-between border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#ff2d2d] to-[#ff6b6b] rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_20px_rgba(255,45,45,0.3)]">
+              X
+            </div>
+            <span className="text-2xl font-black text-white tracking-tighter">tube</span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
         </div>
-        <span className="text-xl font-bold text-white tracking-tight">tube</span>
-        <span className="text-xs text-gray-500 ml-1 bg-white/5 px-2 py-0.5 rounded">Admin</span>
-      </div>
 
-      {/* Nav items */}
-      <nav className="flex-1 py-4 px-3 space-y-1">
-        {SIDEBAR_TABS.map((tab) => {
-          const Icon = tab.icon
-          const isActive = adminTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#ff2d2d]/10 text-[#ff2d2d] border border-[#ff2d2d]/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{tab.label}</span>
-              {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto no-scrollbar">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'videos', label: 'All Videos', icon: Film },
+            { id: 'categories', label: 'Categories', icon: FolderOpen },
+            { id: 'upload', label: 'Upload Video', icon: Upload },
+            { id: 'users', label: 'Users', icon: Users },
+            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+            { id: 'comments', label: 'Comments', icon: MessageSquare },
+            { id: 'settings', label: 'Settings', icon: Settings },
+          ].map((item) => {
+            const Icon = item.icon
+            const isActive = adminTab === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setAdminTab(item.id)}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 relative group overflow-hidden ${
+                  isActive
+                    ? 'text-white bg-[#ff2d2d]/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-tab"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-[#ff2d2d] rounded-r-full shadow-[0_0_15px_#ff2d2d]"
+                  />
+                )}
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-[#ff2d2d]' : ''}`} />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-white/5">
+          <button
+            onClick={logoutAdmin}
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-gray-400 hover:text-[#ff2d2d] hover:bg-[#ff2d2d]/10 transition-all transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </motion.aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header */}
+        <header className={`h-16 px-6 flex items-center justify-between border-b border-white/5 transition-all ${scrolled ? 'bg-[#0b0f1a]/80 backdrop-blur-md' : 'bg-transparent'}`}>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className={`lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors ${isSidebarOpen ? 'hidden' : 'block'}`}>
+              <Menu className="w-5 h-5 text-gray-400" />
             </button>
-          )
-        })}
-      </nav>
+            <h1 className="text-lg font-bold text-white capitalize">{adminTab}</h1>
+          </div>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-white/10">
-        <button
-          onClick={logoutAdmin}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-[#ff2d2d] hover:bg-[#ff2d2d]/5 transition-all cursor-pointer"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
-      </div>
+          <div className="flex items-center gap-4">
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input 
+                type="text" 
+                placeholder="Search command..." 
+                className="bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-1.5 text-sm text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all w-48 focus:w-64"
+              />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff2d2d] to-purple-600 flex items-center justify-center font-bold text-xs">
+              AD
+            </div>
+          </div>
+        </header>
+
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={adminTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {adminTab === 'dashboard' && <DashboardTab />}
+              {adminTab === 'videos' && <VideosTab />}
+              {adminTab === 'categories' && <CategoriesTab />}
+              {adminTab === 'upload' && <UploadTab />}
+              {['users', 'analytics', 'comments', 'settings'].includes(adminTab) && (
+                <div className="flex flex-col items-center justify-center py-40 opacity-30">
+                  <BarChart3 className="w-20 h-20 mb-4" />
+                  <h3 className="text-xl font-bold">Work in Progress</h3>
+                  <p className="text-sm">The {adminTab} module will be available in the next update.</p>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
   )
 }
 
-// ─── Dashboard Tab ───────────────────────────────────────────────────────────
+// ─── Sub-Tabs Implementation ─────────────────────────────────────────────────
+
 function DashboardTab() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -212,394 +235,198 @@ function DashboardTab() {
 
   useEffect(() => { fetchStats() }, [fetchStats])
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-[#111827] rounded-xl border border-white/5 p-6 animate-pulse">
-              <div className="h-4 w-20 bg-white/10 rounded mb-3" />
-              <div className="h-8 w-16 bg-white/10 rounded" />
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (!stats) {
-    return (
-      <div className="text-center py-12 text-gray-400">
-        <p>Failed to load dashboard stats</p>
-        <button onClick={fetchStats} className="mt-2 text-[#ff2d2d] hover:underline cursor-pointer">Retry</button>
-      </div>
-    )
-  }
-
-  const statCards = [
-    { label: 'Total Videos', value: stats.totalVideos, icon: Film, color: '#ff2d2d' },
-    { label: 'Total Views', value: formatNumber(stats.totalViews), icon: Eye, color: '#3b82f6' },
-    { label: 'Total Likes', value: formatNumber(stats.totalLikes), icon: Heart, color: '#f59e0b' },
-    { label: 'Storage Used', value: formatBytes(stats.storageUsed), icon: HardDrive, color: '#10b981' },
-  ]
+  const statCards = useMemo(() => [
+    { label: 'Total Users', value: '12.8K', icon: Users, color: '#ff2d2d', growth: '+12%' },
+    { label: 'Total Videos', value: stats?.totalVideos || '0', icon: Film, color: '#3b82f6', growth: '+5%' },
+    { label: 'Total Views', value: formatNumber(stats?.totalViews || 0), icon: Eye, color: '#10b981', growth: '+18%' },
+    { label: 'Storage Used', value: formatBytes(stats?.storageUsed || 0), icon: HardDrive, color: '#f59e0b', growth: '92% full' },
+  ], [stats])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-        <button onClick={fetchStats} className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">
-          Refresh
-        </button>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <div
-              key={card.label}
-              className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-6 hover:border-[#ff2d2d]/30 transition-all group shadow-xl"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-gray-400 text-sm">{card.label}</span>
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${card.color}15`, border: `1px solid ${card.color}30` }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: card.color }} />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-white">{card.value}</p>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown */}
-        <div className="bg-[#111827] rounded-xl border border-white/5 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Category Breakdown</h3>
-          {stats.categoryStats.length === 0 ? (
-            <p className="text-gray-500 text-sm">No categories yet</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.categoryStats.map((cat) => {
-                const maxCount = Math.max(...stats.categoryStats.map(c => c.count))
-                const pct = maxCount > 0 ? (cat.count / maxCount) * 100 : 0
-                return (
-                  <div key={cat.category} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">{cat.category}</span>
-                      <span className="text-gray-500">{cat.count} videos</span>
-                    </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#ff2d2d] to-[#ff6b6b] rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Videos */}
-        <div className="bg-[#111827] rounded-xl border border-white/5 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Videos</h3>
-          {stats.recentVideos.length === 0 ? (
-            <p className="text-gray-500 text-sm">No videos yet</p>
-          ) : (
-            <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
-              {stats.recentVideos.map((video) => (
-                <div key={video.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                  <div className="w-16 h-10 rounded overflow-hidden bg-white/5 shrink-0 relative">
-                    {video.thumbnail ? (
-                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Film className="w-4 h-4 text-gray-600" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white truncate">{video.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{video.views}</span>
-                      <span>{video.category}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Upload Video Tab ────────────────────────────────────────────────────────
-function UploadTab() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('Uncategorized')
-  const [categories, setCategories] = useState<CategoryData[]>([])
-  const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [dragActive, setDragActive] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    fetch('/api/admin/categories')
-      .then(res => res.json())
-      .then(data => {
-        if (data.categories) setCategories(data.categories)
-      })
-      .catch(console.error)
-  }, [])
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true)
-    else if (e.type === 'dragleave') setDragActive(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file)
-    }
-  }, [])
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) setVideoFile(file)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!videoFile || !title) return
-
-    setUploading(true)
-    setUploadProgress(0)
-
-    try {
-      // 1. Get Presigned URL
-      const presignedRes = await fetch('/api/admin/upload/presigned', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: videoFile.name,
-          contentType: videoFile.type || 'video/mp4'
-        })
-      })
-
-      if (!presignedRes.ok) throw new Error('Failed to get upload URL')
-      const { uploadUrl, publicUrl, videoId } = await presignedRes.json()
-
-      // 2. Direct Upload to R2 via XHR
-      const xhr = new XMLHttpRequest()
-      xhr.open('PUT', uploadUrl)
-      xhr.setRequestHeader('Content-Type', videoFile.type || 'video/mp4')
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100)
-          setUploadProgress(percent)
-        }
-      })
-
-      xhr.onload = async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // 3. Sync metadata to DB
-          try {
-            const syncRes = await fetch('/api/admin/upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: videoId,
-                title,
-                description,
-                category,
-                filePath: publicUrl,
-                size: videoFile.size,
-                duration: '0:00' // Placeholder, will be updated on play or via serverless later
-              })
-            })
-
-            if (syncRes.ok) {
-              toast({ title: 'Upload successful!', description: `"${title}" has been uploaded.` })
-              setTitle('')
-              setDescription('')
-              setCategory('Uncategorized')
-              setVideoFile(null)
-              setUploadProgress(0)
-              if (fileInputRef.current) fileInputRef.current.value = ''
-            } else {
-              throw new Error('Failed to sync database')
-            }
-          } catch (err: any) {
-            toast({ title: 'Sync failed', description: err.message, variant: 'destructive' })
-          } finally {
-            setUploading(false)
-          }
-        } else {
-          setUploading(false)
-          toast({ title: 'Upload failed', description: 'R2 rejection', variant: 'destructive' })
-        }
-      }
-
-      xhr.onerror = () => {
-        setUploading(false)
-        toast({ title: 'Upload failed', description: 'Network error during R2 upload', variant: 'destructive' })
-      }
-
-      xhr.send(videoFile)
-
-    } catch (err: any) {
-      setUploading(false)
-      toast({ title: 'Process failed', description: err.message, variant: 'destructive' })
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Upload Video</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-        {/* Drag & Drop Zone */}
-        <div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-            dragActive
-              ? 'border-[#ff2d2d] bg-[#ff2d2d]/5'
-              : videoFile
-                ? 'border-green-500/50 bg-green-500/5'
-                : 'border-white/20 hover:border-white/40 bg-white/[0.02]'
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          {videoFile ? (
-            <div className="space-y-2">
-              <FileVideo className="w-12 h-12 text-green-400 mx-auto" />
-              <p className="text-white font-medium">{videoFile.name}</p>
-              <p className="text-gray-400 text-sm">{formatBytes(videoFile.size)}</p>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setVideoFile(null) }}
-                className="text-[#ff2d2d] text-sm hover:underline cursor-pointer"
-              >
-                Remove file
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Upload className="w-12 h-12 text-gray-500 mx-auto" />
-              <p className="text-gray-300">Drag & drop your video here</p>
-              <p className="text-gray-500 text-sm">or click to browse files</p>
-            </div>
-          )}
-        </div>
-
-        {/* Max file size notice */}
-        <p className="text-gray-500 text-xs -mt-4">Max recommended file size: 2GB. Supported formats: MP4, WebM, MOV, AVI</p>
-
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Title <span className="text-[#ff2d2d]">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter video title"
-            required
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 focus:ring-1 focus:ring-[#ff2d2d]/30 transition-all"
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter video description (optional)"
-            rows={4}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 focus:ring-1 focus:ring-[#ff2d2d]/30 transition-all resize-none"
-          />
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#ff2d2d]/50 focus:ring-1 focus:ring-[#ff2d2d]/30 transition-all appearance-none cursor-pointer"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
+    <div className="space-y-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        {statCards.map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative group hover:border-white/20 transition-all shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
-            <option value="Uncategorized" className="bg-[#111827]">Uncategorized</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name} className="bg-[#111827]">{cat.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Thumbnail notice */}
-        <div className="flex items-center gap-2 text-gray-400 text-sm bg-white/5 rounded-lg px-4 py-3">
-          <Info className="w-4 h-4 shrink-0" />
-          <span>Thumbnail will be auto-generated from the video</span>
-        </div>
-
-        {/* Upload Progress */}
-        {uploading && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-300">Uploading...</span>
-              <span className="text-[#ff2d2d]">{uploadProgress}%</span>
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <card.icon className="w-20 h-20" />
             </div>
-            <Progress value={uploadProgress} className="h-2 bg-white/10 [&>div]:bg-gradient-to-r [&>div]:from-[#ff2d2d] [&>div]:to-[#ff6b6b]" />
-          </div>
-        )}
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}20` }}>
+                <card.icon className="w-6 h-6" style={{ color: card.color }} />
+              </div>
+              <span className={`text-[10px] font-black px-2 py-1 rounded-full ${card.growth.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                {card.growth}
+              </span>
+            </div>
+            <p className="text-sm font-bold text-gray-400 mb-1">{card.label}</p>
+            <h3 className="text-3xl font-black text-white tracking-tighter">{card.value}</h3>
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={uploading || !videoFile || !title}
-          className="w-full bg-[#ff2d2d] hover:bg-[#e62626] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg py-3 font-medium transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          <Upload className="w-5 h-5" />
-          {uploading ? 'Uploading...' : 'Upload Video'}
-        </button>
-      </form>
+      {/* Analytics Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-white">Views Performance</h3>
+              <p className="text-sm text-gray-500">Real-time engagement tracking</p>
+            </div>
+            <div className="flex gap-2">
+              <button className="px-4 py-1.5 rounded-lg bg-white/10 text-xs font-bold hover:bg-[#ff2d2d] transition-colors">Daily</button>
+              <button className="px-4 py-1.5 rounded-lg bg-white/5 text-xs font-bold hover:bg-white/10 transition-colors">Monthly</button>
+            </div>
+          </div>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={VIEW_DATA}>
+                <defs>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ff2d2d" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ff2d2d" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#ffffff20" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  dy={10}
+                />
+                <YAxis 
+                  stroke="#ffffff20" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tickFormatter={(val) => `${val/1000}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#121826', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '12px' }}
+                  itemStyle={{ color: '#ff2d2d' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="views" 
+                  stroke="#ff2d2d" 
+                  strokeWidth={4}
+                  fillOpacity={1} 
+                  fill="url(#colorViews)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+          <h3 className="text-xl font-bold text-white mb-2">User Activity</h3>
+          <p className="text-sm text-gray-500 mb-8">Access devices breakdown</p>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={USER_ACTIVITY_DATA}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {USER_ACTIVITY_DATA.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                   contentStyle={{ backgroundColor: '#121826', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-8 space-y-4">
+            {USER_ACTIVITY_DATA.map((entry, i) => (
+              <div key={entry.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                  <span className="text-sm font-bold text-gray-400">{entry.name}</span>
+                </div>
+                <span className="text-sm font-black text-white">{entry.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity Table */}
+      <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="p-8 border-b border-white/5 flex items-center justify-between">
+           <h3 className="text-xl font-bold text-white">Live Activity Feed</h3>
+           <div className="flex items-center gap-2 text-green-500 text-[10px] font-black uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Real-time
+           </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/5 bg-white/[0.02]">
+                <th className="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Video</th>
+                <th className="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Views</th>
+                <th className="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {(stats?.recentVideos || []).map((video) => (
+                <tr key={video.id} className="hover:bg-white/[0.03] transition-colors group">
+                  <td className="px-8 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-8 rounded-lg overflow-hidden bg-black/40 shrink-0">
+                         <img src={video.thumbnail} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-sm font-bold text-white truncate max-w-[200px]">{video.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-4">
+                    <span className="px-3 py-1 rounded-full bg-white/5 text-[11px] font-bold text-gray-400 group-hover:bg-[#ff2d2d]/10 group-hover:text-[#ff2d2d] transition-colors">
+                      {video.category}
+                    </span>
+                  </td>
+                  <td className="px-8 py-4">
+                    <div className="flex items-center gap-1.5">
+                       <Eye className="w-3.5 h-3.5 text-blue-500" />
+                       <span className="text-sm font-black text-white">{formatNumber(video.views)}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-4">
+                    <div className="flex items-center gap-2 text-green-500 text-[11px] font-bold">
+                       <CheckCircle2 className="w-3.5 h-3.5" />
+                       Ready
+                    </div>
+                  </td>
+                  <td className="px-8 py-4 text-right text-xs font-medium text-gray-500">
+                    {new Date(video.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
 
-// ─── All Videos Tab ──────────────────────────────────────────────────────────
 function VideosTab() {
-  const { openPlayer } = useAppStore()
   const [videos, setVideos] = useState<VideoData[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -610,6 +437,7 @@ function VideosTab() {
   const [categories, setCategories] = useState<CategoryData[]>([])
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -641,7 +469,7 @@ function VideosTab() {
   }, [])
 
   useEffect(() => { fetchVideos() }, [fetchVideos])
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => { fetchCategories() }, [fetchCategories])
 
   const handleEdit = (video: VideoData) => {
     setEditingId(video.id)
@@ -662,12 +490,7 @@ function VideosTab() {
         toast({ title: 'Video updated', description: `"${editTitle}" has been updated.` })
         setEditingId(null)
         fetchVideos()
-      } else {
-        const data = await res.json()
-        toast({ title: 'Update failed', description: data.error || 'Unknown error', variant: 'destructive' })
       }
-    } catch {
-      toast({ title: 'Update failed', description: 'Network error', variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -680,220 +503,133 @@ function VideosTab() {
         toast({ title: 'Video deleted', description: 'The video has been removed.' })
         setDeleteId(null)
         fetchVideos()
-      } else {
-        const data = await res.json()
-        toast({ title: 'Delete failed', description: data.error || 'Unknown error', variant: 'destructive' })
       }
-    } catch {
-      toast({ title: 'Delete failed', description: 'Network error', variant: 'destructive' })
-    }
-  }
-
-  const filteredVideos = videos
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">All Videos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-[#111827] rounded-xl border border-white/5 animate-pulse h-64" />
-          ))}
-        </div>
-      </div>
-    )
+    } catch {}
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-white">All Videos</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search videos..."
-            className="bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 transition-all w-full sm:w-64"
-          />
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h2 className="text-3xl font-black text-white tracking-tighter">All Videos</h2>
+           <p className="text-sm text-gray-500">Manage and optimize your content library</p>
+        </div>
+        <div className="flex items-center gap-4">
+           <div className="relative group">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-[#ff2d2d] transition-colors" />
+             <input 
+               type="text" 
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               placeholder="Search videos..." 
+               className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all w-full md:w-64"
+             />
+           </div>
+           <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[#ff2d2d] text-white' : 'text-gray-500 hover:text-white'}`}
+              >
+                 <LayoutDashboard className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-[#ff2d2d] text-white' : 'text-gray-500 hover:text-white'}`}
+              >
+                 <Filter className="w-4 h-4" />
+              </button>
+           </div>
         </div>
       </div>
 
-      {filteredVideos.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Film className="w-16 h-16 mx-auto mb-3 opacity-30" />
-          <p>No videos found</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVideos.map((video) => (
-            <div
-              key={video.id}
-              className="bg-[#111827] rounded-xl border border-white/5 overflow-hidden hover:border-white/10 transition-all group"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video bg-black/50 overflow-hidden">
-                {video.thumbnail ? (
-                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Film className="w-8 h-8 text-gray-700" />
-                  </div>
-                )}
-                {/* Duration badge */}
-                <span className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
-                  {video.duration}
-                </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {videos.map((video) => (
+          <motion.div
+            key={video.id}
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden group hover:border-white/20 transition-all shadow-xl flex flex-col"
+          >
+            <div className="relative aspect-video bg-black/40 overflow-hidden">
+               <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <button onClick={() => useAppStore.getState().openPlayer(video.id)} className="p-3 bg-[#ff2d2d] rounded-full shadow-lg shadow-[#ff2d2d]/40">
+                     <Play className="w-5 h-5 fill-white" />
+                  </button>
+               </div>
+               <span className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-[10px] font-black px-2 py-1 rounded-lg border border-white/10">
+                 {video.duration}
+               </span>
+            </div>
+            
+            <div className="p-5 flex-1 flex flex-col">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <h4 className="text-sm font-bold text-white line-clamp-2 leading-snug">{video.title}</h4>
+                <div className="relative group/menu">
+                   <button className="p-1 hover:bg-white/5 rounded-lg">
+                      <MoreVertical className="w-4 h-4 text-gray-500" />
+                   </button>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                 <span className="px-2 py-0.5 rounded-lg bg-[#ff2d2d]/10 text-[#ff2d2d] text-[10px] font-black">{video.category}</span>
+                 <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black">{formatBytes(video.size)}</span>
               </div>
 
-              <div className="p-4 space-y-3">
-                {editingId === video.id ? (
-                  /* Inline Edit Form */
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
-                    />
-                    <textarea
-                      value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      rows={2}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff2d2d]/50 transition-all resize-none"
-                    />
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff2d2d]/50 transition-all appearance-none cursor-pointer"
-                      style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
-                    >
-                      <option value="Uncategorized" className="bg-[#111827]">Uncategorized</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.name} className="bg-[#111827]">{cat.name}</option>
-                      ))}
-                    </select>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleSaveEdit(video.id)}
-                        disabled={saving}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg py-2 transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        {saving ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="flex-1 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg py-2 transition-colors cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Video Info */}
-                    <div>
-                      <h3 className="text-white font-medium truncate">{video.title}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span className="bg-white/5 px-2 py-0.5 rounded">{video.category}</span>
-                        <span>{formatBytes(video.size)}</span>
-                        <span>{formatDate(video.createdAt)}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{video.views}</span>
-                      <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{video.likes}</span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                      <button
-                        onClick={() => handleEdit(video)}
-                        className="flex-1 flex items-center justify-center gap-1 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-sm rounded-lg py-2 transition-all cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(video.id)}
-                        className="flex-1 flex items-center justify-center gap-1 bg-white/5 hover:bg-[#ff2d2d]/10 text-gray-300 hover:text-[#ff2d2d] text-sm rounded-lg py-2 transition-all cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
-                      </button>
-                      <button
-                        onClick={() => openPlayer(video.id)}
-                        className="flex-1 flex items-center justify-center gap-1 bg-[#ff2d2d]/10 hover:bg-[#ff2d2d]/20 text-[#ff2d2d] text-sm rounded-lg py-2 transition-all cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5" /> Watch
-                      </button>
-                    </div>
-                  </>
-                )}
+              <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                 <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{formatNumber(video.views)}</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                    <button onClick={() => handleEdit(video)} className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-all">
+                       <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setDeleteId(video.id)} className="p-2 hover:bg-[#ff2d2d]/10 text-gray-400 hover:text-[#ff2d2d] rounded-xl transition-all">
+                       <Trash2 className="w-4 h-4" />
+                    </button>
+                 </div>
               </div>
             </div>
-          ))}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Delete Confirmation */}
+      {deleteId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
+           <div className="bg-[#121826] border border-white/10 rounded-3xl p-8 w-full max-w-sm text-center">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <Trash2 className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Delete Video?</h3>
+              <p className="text-sm text-gray-500 mb-8">This action is permanent and cannot be undone.</p>
+              <div className="flex gap-4">
+                 <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-2xl font-bold transition-all">Cancel</button>
+                 <button onClick={() => handleDelete(deleteId)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-2xl font-bold transition-all">Delete</button>
+              </div>
+           </div>
         </div>
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#111827] border-white/10 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Video?</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              This action cannot be undone. The video file, thumbnail, and HLS stream will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/10 text-gray-300 border-white/10 hover:bg-white/20 hover:text-white">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-              className="bg-[#ff2d2d] hover:bg-[#e62626] text-white border-none"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
 
-// ─── Categories Tab ──────────────────────────────────────────────────────────
 function CategoriesTab() {
   const [categories, setCategories] = useState<CategoryData[]>([])
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [newCatName, setNewCatName] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   const fetchCategories = useCallback(async () => {
     try {
-      const [catRes, vidRes] = await Promise.all([
-        fetch('/api/admin/categories'),
-        fetch('/api/videos?limit=1000'),
-      ])
-      if (catRes.ok) {
-        const catData = await catRes.json()
-        setCategories(catData.categories || [])
+      const res = await fetch('/api/admin/categories')
+      if (res.ok) {
+        const data = await res.json()
+        setCategories(data.categories || [])
       }
-      if (vidRes.ok) {
-        const vidData = await vidRes.json()
-        const counts: Record<string, number> = {}
-        ;(vidData.videos || []).forEach((v: VideoData) => {
-          counts[v.category] = (counts[v.category] || 0) + 1
-        })
-        setCategoryCounts(counts)
-      }
-    } catch (err) {
-      console.error('Failed to fetch categories:', err)
     } finally {
       setLoading(false)
     }
@@ -901,389 +637,334 @@ function CategoriesTab() {
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newCatName.trim()) return
+  const handleCreate = async () => {
+    if (!newCatName) return
     setCreating(true)
     try {
       const res = await fetch('/api/admin/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCatName.trim() }),
+        body: JSON.stringify({ name: newCatName }),
       })
       if (res.ok) {
         toast({ title: 'Category created', description: `"${newCatName}" has been added.` })
         setNewCatName('')
         fetchCategories()
-      } else {
-        const data = await res.json()
-        toast({ title: 'Failed to create', description: data.error || 'Unknown error', variant: 'destructive' })
       }
-    } catch {
-      toast({ title: 'Failed to create', description: 'Network error', variant: 'destructive' })
     } finally {
       setCreating(false)
     }
   }
 
-  const handleSaveEdit = async (id: string) => {
-    if (!editName.trim()) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName.trim() }),
-      })
-      if (res.ok) {
-        toast({ title: 'Category updated', description: `Renamed to "${editName}".` })
-        setEditingId(null)
-        fetchCategories()
-      } else {
-        const data = await res.json()
-        toast({ title: 'Update failed', description: data.error || 'Unknown error', variant: 'destructive' })
-      }
-    } catch {
-      toast({ title: 'Update failed', description: 'Network error', variant: 'destructive' })
-    } finally {
-      setSaving(false)
-    }
-  }
-
   const handleDelete = async (id: string) => {
-    try {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast({ title: 'Category deleted', description: 'Videos moved to Uncategorized.' })
-        setDeleteId(null)
-        fetchCategories()
-      } else {
-        const data = await res.json()
-        toast({ title: 'Delete failed', description: data.error || 'Unknown error', variant: 'destructive' })
-      }
-    } catch {
-      toast({ title: 'Delete failed', description: 'Network error', variant: 'destructive' })
+    if (!confirm('Are you sure? This will uncategorize related videos.')) return
+    const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      toast({ title: 'Category deleted' })
+      fetchCategories()
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Categories</h2>
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-[#111827] rounded-xl border border-white/5 p-4 animate-pulse">
-            <div className="h-5 w-40 bg-white/10 rounded" />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Categories</h2>
+    <div className="space-y-8">
+      <div>
+         <h2 className="text-3xl font-black text-white tracking-tighter">Content Categories</h2>
+         <p className="text-sm text-gray-500">Organize your library for better discovery</p>
+      </div>
 
-      {/* Add new category */}
-      <form onSubmit={handleCreate} className="flex gap-3 max-w-md">
-        <input
-          type="text"
-          value={newCatName}
-          onChange={(e) => setNewCatName(e.target.value)}
-          placeholder="New category name"
-          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 focus:ring-1 focus:ring-[#ff2d2d]/30 transition-all"
-        />
-        <button
-          type="submit"
-          disabled={creating || !newCatName.trim()}
-          className="bg-[#ff2d2d] hover:bg-[#e62626] disabled:opacity-50 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all cursor-pointer flex items-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Add
-        </button>
-      </form>
-
-      {/* Category List */}
-      {categories.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No categories yet</p>
-        </div>
-      ) : (
-        <div className="space-y-3 max-w-2xl">
-          {categories.map((cat) => {
-            const count = categoryCounts[cat.name] || 0
-            return (
-              <div
-                key={cat.id}
-                className="bg-[#111827] rounded-xl border border-white/5 p-4 flex items-center gap-4 hover:border-white/10 transition-all"
-              >
-                {editingId === cat.id ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit(cat.id)
-                        if (e.key === 'Escape') setEditingId(null)
-                      }}
-                    />
-                    <button
-                      onClick={() => handleSaveEdit(cat.id)}
-                      disabled={saving}
-                      className="p-2 text-green-400 hover:bg-green-400/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="p-2 text-gray-400 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <FolderOpen className="w-5 h-5 text-[#ff2d2d] shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{cat.name}</p>
-                      <p className="text-gray-500 text-xs">{count} video{count !== 1 ? 's' : ''}</p>
-                    </div>
-                    <button
-                      onClick={() => { setEditingId(cat.id); setEditName(cat.name) }}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(cat.id)}
-                      className="p-2 text-gray-400 hover:text-[#ff2d2d] hover:bg-[#ff2d2d]/10 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#111827] border-white/10 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Category?</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              Videos in this category will be moved to &ldquo;Uncategorized&rdquo;. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/10 text-gray-300 border-white/10 hover:bg-white/20 hover:text-white">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-              className="bg-[#ff2d2d] hover:bg-[#e62626] text-white border-none"
+      <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+         <h3 className="text-lg font-bold text-white mb-6">Create New Category</h3>
+         <div className="flex gap-4">
+            <div className="relative flex-1">
+               <FolderOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+               <input 
+                  type="text" 
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  placeholder="Category name (e.g. Action, Drama, Tech)..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
+               />
+            </div>
+            <button 
+              onClick={handleCreate}
+              disabled={creating || !newCatName}
+              className="px-8 py-4 bg-[#ff2d2d] hover:bg-[#e62626] rounded-2xl font-bold shadow-lg shadow-[#ff2d2d]/30 transition-all disabled:opacity-50"
             >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  )
-}
-
-// ─── Settings Tab ────────────────────────────────────────────────────────────
-function SettingsTab() {
-  return (
-    <div className="space-y-6 max-w-2xl">
-      <h2 className="text-2xl font-bold text-white">Settings</h2>
-
-      {/* Password Change (placeholder) */}
-      <div className="bg-[#111827] rounded-xl border border-white/5 p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Lock className="w-5 h-5 text-[#ff2d2d]" />
-          Change Admin Password
-        </h3>
-        <div className="space-y-3">
-          <input
-            type="password"
-            placeholder="Current password"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
-          />
-          <input
-            type="password"
-            placeholder="New password"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
-          />
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#ff2d2d]/50 transition-all"
-          />
-        </div>
-        <button
-          disabled
-          className="bg-[#ff2d2d]/50 text-white rounded-lg px-6 py-2.5 text-sm font-medium cursor-not-allowed opacity-60"
-        >
-          Coming Soon
-        </button>
+               {creating ? 'Creating...' : 'Create'}
+            </button>
+         </div>
       </div>
 
-      {/* Storage Info */}
-      <div className="bg-[#111827] rounded-xl border border-white/5 p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <HardDrive className="w-5 h-5 text-[#ff2d2d]" />
-          Storage Information
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-gray-300">
-            <span>Video files</span>
-            <span className="text-gray-500">/public/storage/videos/</span>
-          </div>
-          <div className="flex justify-between text-gray-300">
-            <span>Thumbnails</span>
-            <span className="text-gray-500">/public/storage/thumbnails/</span>
-          </div>
-          <div className="flex justify-between text-gray-300">
-            <span>HLS streams</span>
-            <span className="text-gray-500">/public/storage/hls/</span>
-          </div>
-        </div>
-        <p className="text-gray-500 text-xs">
-          Storage usage is calculated from the video files directory. Thumbnails and HLS segments are not included in the total.
-        </p>
-      </div>
-
-      {/* About */}
-      <div className="bg-[#111827] rounded-xl border border-white/5 p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Info className="w-5 h-5 text-[#ff2d2d]" />
-          About
-        </h3>
-        <div className="space-y-2 text-sm text-gray-400">
-          <p><span className="text-gray-300 font-medium">Xtube</span> — Video streaming platform</p>
-          <p>Version: 1.0.0</p>
-          <p>Built with Next.js, Prisma, and FFmpeg</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+         {categories.map((cat) => (
+           <motion.div 
+             key={cat.id}
+             whileHover={{ y: -5 }}
+             className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 relative group overflow-hidden"
+           >
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                 <FolderOpen className="w-24 h-24" />
+              </div>
+              <div className="flex items-start justify-between mb-8">
+                 <div className="w-12 h-12 bg-[#ff2d2d]/10 rounded-2xl flex items-center justify-center">
+                    <FolderOpen className="w-6 h-6 text-[#ff2d2d]" />
+                 </div>
+                 <button onClick={() => handleDelete(cat.id)} className="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-xl transition-all">
+                    <Trash2 className="w-4 h-4" />
+                 </button>
+              </div>
+              <h4 className="text-lg font-bold text-white mb-1">{cat.name}</h4>
+              <p className="text-xs text-gray-500">Created {new Date(cat.createdAt).toLocaleDateString()}</p>
+           </motion.div>
+         ))}
       </div>
     </div>
   )
 }
 
-// ─── Main AdminPanel Component ───────────────────────────────────────────────
-export default function AdminPanel() {
-  const { isAdmin, showAdminLogin, adminTab, setShowAdminLogin, goHome } = useAppStore()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+function UploadTab() {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('Uncategorized')
+  const [categories, setCategories] = useState<CategoryData[]>([])
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [dragActive, setDragActive] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Mobile block - admin panel not available on mobile
-  const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    fetch('/api/admin/categories')
+      .then(res => res.json())
+      .then(data => { if (data.categories) setCategories(data.categories) })
   }, [])
 
-  if (isMobile && isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#0b0f1a] flex items-center justify-center p-6">
-        <div className="text-center space-y-4 max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-[#ff2d2d]/10 flex items-center justify-center mx-auto border border-[#ff2d2d]/20">
-            <Lock className="w-10 h-10 text-[#ff2d2d]" />
-          </div>
-          <h2 className="text-xl font-bold text-white">Admin Panel Not Available</h2>
-          <p className="text-gray-400 text-sm">
-            The admin panel is only accessible on desktop and tablet devices for security reasons.
-          </p>
-          <button
-            onClick={goHome}
-            className="bg-[#ff2d2d] hover:bg-[#e62626] text-white px-6 py-2.5 rounded-lg font-medium transition-all cursor-pointer"
-          >
-            Go Back Home
-          </button>
-        </div>
-      </div>
-    )
+  const handleFile = (file: File) => {
+    if (file.type.startsWith('video/')) {
+      setVideoFile(file)
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    } else {
+      toast({ title: 'Invalid file', description: 'Please select a video file', variant: 'destructive' })
+    }
   }
 
-  // Show login modal when requested
-  if (showAdminLogin && !isAdmin) {
-    return <AdminLoginModal />
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!videoFile || !title) return
 
-  // Not admin and not showing login — don't render
-  if (!isAdmin) return null
+    setUploading(true)
+    setUploadProgress(0)
 
-  const renderTab = () => {
-    switch (adminTab) {
-      case 'dashboard': return <DashboardTab />
-      case 'upload': return <UploadTab />
-      case 'videos': return <VideosTab />
-      case 'categories': return <CategoriesTab />
-      case 'settings': return <SettingsTab />
-      default: return <DashboardTab />
+    try {
+      const presignedRes = await fetch('/api/admin/upload/presigned', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: videoFile.name, contentType: videoFile.type || 'video/mp4' })
+      })
+
+      if (!presignedRes.ok) throw new Error('Failed to get upload URL')
+      const { uploadUrl, publicUrl, videoId } = await presignedRes.json()
+
+      const xhr = new XMLHttpRequest()
+      xhr.open('PUT', uploadUrl)
+      xhr.setRequestHeader('Content-Type', videoFile.type || 'video/mp4')
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
+      })
+
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          await fetch('/api/admin/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: videoId, title, description, category,
+              filePath: publicUrl, size: videoFile.size, duration: '0:00'
+            })
+          })
+          toast({ title: 'Success!', description: 'Video uploaded and processing.' })
+          setTitle(''); setDescription(''); setVideoFile(null); setPreviewUrl(null); setUploadProgress(0)
+        } else {
+          throw new Error('Upload failed')
+        }
+        setUploading(false)
+      }
+      xhr.send(videoFile)
+    } catch (err: any) {
+      setUploading(false)
+      toast({ title: 'Failed', description: err.message, variant: 'destructive' })
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a] flex">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col bg-[#111827] border-r border-white/10 fixed inset-y-0 left-0 z-40">
-        <SidebarContent />
-      </aside>
+    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+      <div className="flex items-center justify-between">
+         <div>
+            <h2 className="text-3xl font-black text-white tracking-tighter">Publish Content</h2>
+            <p className="text-sm text-gray-500">Upload and optimize for the global audience</p>
+         </div>
+         <div className="flex items-center gap-4 bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-3">
+            <HardDrive className="w-5 h-5 text-blue-500" />
+            <div className="flex flex-col">
+               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cloud Storage</span>
+               <span className="text-xs font-bold text-white">42.8 GB / 100 GB</span>
+            </div>
+         </div>
+      </div>
 
-      {/* Mobile Sidebar (Sheet) */}
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="bg-[#111827] border-white/10 w-72 p-0">
-          <SidebarContent onNavigate={() => setMobileMenuOpen(false)} />
-        </SheetContent>
-      </Sheet>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         {/* Upload Zone */}
+         <div className="space-y-6">
+            {!videoFile ? (
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onDragEnter={() => setDragActive(true)}
+                onDragLeave={() => setDragActive(false)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); setDragActive(false); handleFile(e.dataTransfer.files[0]) }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`aspect-video rounded-3xl border-2 border-dashed flex flex-col items-center justify-center gap-6 cursor-pointer transition-all duration-500 relative overflow-hidden group ${
+                  dragActive ? 'border-[#ff2d2d] bg-[#ff2d2d]/10' : 'border-white/10 bg-[#121826]/40 hover:border-white/30'
+                }`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#ff2d2d]/5 to-blue-500/5 pointer-events-none" />
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                   <Upload className="w-10 h-10 text-gray-400 group-hover:text-[#ff2d2d] transition-colors" />
+                </div>
+                <div className="text-center relative z-10">
+                   <h3 className="text-xl font-bold text-white mb-2">Drag & Drop Video</h3>
+                   <p className="text-sm text-gray-500">MP4, MKV, MOV up to 2GB</p>
+                </div>
+                <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              </motion.div>
+            ) : (
+              <div className="space-y-6">
+                 <div className="aspect-video rounded-3xl bg-black overflow-hidden relative border border-white/10 shadow-2xl group">
+                    {previewUrl && <video src={previewUrl} className="w-full h-full object-contain" muted controls />}
+                    <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black text-white flex items-center gap-2">
+                       <span className="w-2 h-2 rounded-full bg-[#ff2d2d] animate-pulse" />
+                       LIVE PREVIEW
+                    </div>
+                    <button onClick={() => {setVideoFile(null); setPreviewUrl(null)}} className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-md hover:bg-red-500/80 rounded-xl border border-white/10 transition-all opacity-0 group-hover:opacity-100">
+                       <Trash2 className="w-4 h-4 text-white" />
+                    </button>
+                 </div>
+                 <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                       <FileVideo className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                       <p className="text-sm font-bold text-white truncate">{videoFile.name}</p>
+                       <p className="text-[10px] text-gray-500 font-black uppercase">{formatBytes(videoFile.size)} • READY TO PUBLISH</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-green-500 font-black text-[10px]">
+                       <CheckCircle2 className="w-4 h-4" />
+                       VALIDATED
+                    </div>
+                 </div>
+              </div>
+            )}
 
-      {/* Main Content */}
-      <main className="flex-1 md:ml-64 min-h-screen">
-        {/* Mobile Header */}
-        <header className="md:hidden sticky top-0 z-30 bg-[#0b0f1a]/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2">
-            <Play className="w-5 h-5 text-[#ff2d2d] fill-[#ff2d2d]" />
-            <span className="text-lg font-bold text-[#ff2d2d]">Xtube</span>
-            <span className="text-xs text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">Admin</span>
-          </div>
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <button className="p-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
-                <Menu className="w-6 h-6" />
-              </button>
-            </SheetTrigger>
-          </Sheet>
-        </header>
+            <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-[#ff2d2d]" />
+                  Quality Pipeline
+               </h3>
+               <div className="grid grid-cols-3 gap-3">
+                  {['360p', '480p', '720p', '1080p', '2K', '4K'].map((q) => (
+                    <div key={q} className="p-3 bg-white/5 border border-white/5 rounded-xl flex flex-col items-center gap-2">
+                       <span className="text-[10px] font-black text-gray-500">{q}</span>
+                       <span className="text-[10px] font-bold text-white/40">Pending</span>
+                    </div>
+                  ))}
+               </div>
+               <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10 flex items-start gap-3">
+                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                    The video will be automatically optimized for multi-resolution HLS streaming after upload. This process ensures high-quality playback on all connection speeds.
+                  </p>
+               </div>
+            </div>
+         </div>
 
-        {/* Content Area */}
-        <div className="p-4 md:p-8 pb-20 md:pb-8">
-          {renderTab()}
-        </div>
-      </main>
+         {/* Form Section */}
+         <div className="bg-[#121826]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl h-fit space-y-6">
+            <h3 className="text-xl font-bold text-white">Video Details</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+               <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Title</label>
+                  <input 
+                    type="text" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    placeholder="Catchy title for your content..." 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all placeholder:text-gray-600 font-medium"
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Description</label>
+                  <textarea 
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={6}
+                    placeholder="Tell your viewers what the video is about..." 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all placeholder:text-gray-600 font-medium resize-none"
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Category</label>
+                     <select 
+                       value={category}
+                       onChange={(e) => setCategory(e.target.value)}
+                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all appearance-none cursor-pointer font-medium"
+                     >
+                        <option value="Uncategorized">Select Category</option>
+                        {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Tags</label>
+                     <input 
+                       placeholder="Action, Viral, 4K..." 
+                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-[#ff2d2d]/50 transition-all placeholder:text-gray-600 font-medium"
+                     />
+                  </div>
+               </div>
 
-      {/* Global styles for custom scrollbar */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.1);
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255,255,255,0.2);
-        }
-      `}</style>
+               {uploading && (
+                 <div className="space-y-3 pt-4">
+                    <div className="flex items-center justify-between text-xs font-black px-1">
+                       <span className="text-blue-500 uppercase tracking-tighter animate-pulse">UPLOADING DATA PACKETS...</span>
+                       <span className="text-white">{uploadProgress}%</span>
+                    </div>
+                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                       <motion.div 
+                         className="h-full bg-gradient-to-r from-[#ff2d2d] to-purple-600 rounded-full"
+                         initial={{ width: 0 }}
+                         animate={{ width: `${uploadProgress}%` }}
+                         transition={{ duration: 0.5 }}
+                       />
+                    </div>
+                 </div>
+               )}
+
+               <button 
+                  type="submit"
+                  disabled={uploading || !videoFile || !title}
+                  className="w-full bg-gradient-to-r from-[#ff2d2d] to-[#ff6b6b] hover:from-[#e62626] hover:to-[#ff2d2d] py-5 rounded-2xl font-black text-white shadow-xl shadow-[#ff2d2d]/30 transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-3 active:scale-[0.98]"
+               >
+                  <Upload className="w-6 h-6" />
+                  {uploading ? 'PROCESSING UPLOAD...' : 'START PUBLISHING'}
+               </button>
+            </form>
+         </div>
+      </div>
     </div>
   )
 }
