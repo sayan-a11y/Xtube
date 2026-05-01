@@ -46,9 +46,9 @@ export default function Navbar() {
   }, [])
 
   const handleLogoClick = useCallback(() => {
-    // Mobile: Refresh website
+    // Mobile: Go Home instead of reload
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      window.location.reload()
+      goHome()
       return
     }
 
@@ -110,6 +110,7 @@ export default function Navbar() {
         {/* Left: Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
+            type="button"
             onClick={handleLogoClick}
             className="flex items-center gap-2 group cursor-pointer select-none"
             aria-label="Xtube Home"
@@ -135,7 +136,7 @@ export default function Navbar() {
                 className="w-full bg-[#121212] border border-white/10 rounded-l-full pl-6 pr-4 py-2 text-white text-base placeholder:text-gray-500 focus:outline-none focus:border-[#3ea6ff] transition-all"
               />
             </div>
-            <button className="bg-white/5 border border-l-0 border-white/10 rounded-r-full px-5 py-2 hover:bg-white/10 transition-colors">
+            <button type="button" className="bg-white/5 border border-l-0 border-white/10 rounded-r-full px-5 py-2 hover:bg-white/10 transition-colors">
               <Search className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -144,6 +145,7 @@ export default function Navbar() {
         {/* Right: Actions */}
         <div className="flex items-center gap-1 md:gap-2">
           <button
+            type="button"
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
             className="md:hidden p-2 text-white hover:bg-white/10 rounded-full transition-colors"
           >

@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { Progress } from '@/components/ui/progress'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
 
 // ─── Constants & Mock Data ───────────────────────────────────────────────────
 
@@ -38,6 +39,17 @@ const USER_ACTIVITY_DATA = [
 ]
 
 function AnalyticsTab() {
+  const [liveViewData, setLiveViewData] = useState(VIEW_DATA)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveViewData(prev => prev.map(d => ({
+        ...d,
+        views: d.views + Math.floor(Math.random() * 50) - 20
+      })))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -46,7 +58,7 @@ function AnalyticsTab() {
            <p className="text-sm text-gray-500">Advanced audience and performance metrics</p>
         </div>
         <div className="flex items-center gap-4 bg-white/5 p-1 rounded-xl border border-white/5">
-           <button className="px-6 py-2 bg-[#ff2d2d] rounded-lg text-sm font-bold shadow-lg shadow-[#ff2d2d]/20 transition-all">Export Report</button>
+           <button type="button" className="px-6 py-2 bg-[#ff2d2d] rounded-lg text-sm font-bold shadow-lg shadow-[#ff2d2d]/20 transition-all">Export Report</button>
         </div>
       </div>
 
@@ -56,7 +68,7 @@ function AnalyticsTab() {
               <h3 className="text-xl font-bold text-white mb-8">Audience Growth</h3>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={VIEW_DATA}>
+                  <AreaChart data={liveViewData}>
                     <defs>
                       <linearGradient id="colorAudience" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -169,8 +181,8 @@ function CommentsTab() {
            <p className="text-sm text-gray-500">Manage interaction across all your videos</p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-xs font-bold transition-all">Pending (12)</button>
-           <button className="px-5 py-2 bg-[#ff2d2d] rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#ff2d2d]/20">Auto-Moderation: ON</button>
+           <button type="button" className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-xs font-bold transition-all">Pending (12)</button>
+           <button type="button" className="px-5 py-2 bg-[#ff2d2d] rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#ff2d2d]/20">Auto-Moderation: ON</button>
         </div>
       </div>
 
@@ -212,8 +224,8 @@ function CommentsTab() {
                         </td>
                         <td className="px-6 py-4 text-right">
                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button className="p-2 hover:bg-green-500/10 text-gray-500 hover:text-green-500 rounded-xl transition-all"><CheckCircle2 className="w-4 h-4" /></button>
-                              <button className="p-2 hover:bg-[#ff2d2d]/10 text-gray-500 hover:text-[#ff2d2d] rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                              <button type="button" className="p-2 hover:bg-green-500/10 text-gray-500 hover:text-green-500 rounded-xl transition-all"><CheckCircle2 className="w-4 h-4" /></button>
+                              <button type="button" className="p-2 hover:bg-[#ff2d2d]/10 text-gray-500 hover:text-[#ff2d2d] rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
                            </div>
                         </td>
                      </tr>
@@ -224,8 +236,8 @@ function CommentsTab() {
          <div className="p-6 bg-white/5 border-t border-white/5 flex items-center justify-between">
             <span className="text-xs text-gray-500 font-bold">Showing 4 of 28 comments</span>
             <div className="flex gap-2">
-               <button className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronLeft className="w-4 h-4" /></button>
-               <button className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronRight className="w-4 h-4" /></button>
+               <button type="button" className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronLeft className="w-4 h-4" /></button>
+               <button type="button" className="p-2 bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><ChevronRight className="w-4 h-4" /></button>
             </div>
          </div>
       </div>
@@ -303,7 +315,7 @@ export default function AdminPanel() {
             </div>
             <span className="text-2xl font-black text-white tracking-tighter">tube</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors">
+          <button type="button" onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
@@ -321,6 +333,7 @@ export default function AdminPanel() {
             const isActive = adminTab === item.id
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => setAdminTab(item.id)}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 relative group overflow-hidden ${
@@ -344,6 +357,7 @@ export default function AdminPanel() {
 
         <div className="p-4 border-t border-white/5">
           <button
+            type="button"
             onClick={logoutAdmin}
             className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-gray-400 hover:text-[#ff2d2d] hover:bg-[#ff2d2d]/10 transition-all transition-colors"
           >
@@ -358,7 +372,7 @@ export default function AdminPanel() {
         {/* Header */}
         <header className={`h-16 px-6 flex items-center justify-between border-b border-white/5 transition-all ${scrolled ? 'bg-[#0b0f1a]/80 backdrop-blur-md' : 'bg-transparent'}`}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className={`lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors ${isSidebarOpen ? 'hidden' : 'block'}`}>
+            <button type="button" onClick={() => setIsSidebarOpen(true)} className={`lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors ${isSidebarOpen ? 'hidden' : 'block'}`}>
               <Menu className="w-5 h-5 text-gray-400" />
             </button>
             <h1 className="text-lg font-bold text-white capitalize">{adminTab}</h1>
@@ -425,6 +439,35 @@ function DashboardTab() {
 
   useEffect(() => { fetchStats() }, [fetchStats])
 
+  // Real-time listener for live analytics and stats
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-analytics-live')
+      .on('postgres_changes', { event: '*', table: 'Video', schema: 'public' }, (payload) => {
+        console.log('[Analytics] Live change detected, syncing dashboard...')
+        fetchStats()
+        
+        // Dynamic notification for the admin
+        if (payload.eventType === 'INSERT') {
+           toast({ title: 'Live Update', description: 'A new video was just published.' })
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [fetchStats])
+
+  // Simulated live data jitter for premium feel
+  const [liveViewData, setLiveViewData] = useState(VIEW_DATA)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveViewData(prev => prev.map(d => ({
+        ...d,
+        views: d.views + Math.floor(Math.random() * 50) - 20
+      })))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
   const statCards = useMemo(() => [
     { label: 'Total Users', value: '12.8K', icon: Users, color: '#ff2d2d', growth: '+12%' },
     { label: 'Total Videos', value: stats?.totalVideos || '0', icon: Film, color: '#3b82f6', growth: '+5%' },
@@ -470,13 +513,13 @@ function DashboardTab() {
               <p className="text-sm text-gray-500">Real-time engagement tracking</p>
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-1.5 rounded-lg bg-white/10 text-xs font-bold hover:bg-[#ff2d2d] transition-colors">Daily</button>
-              <button className="px-4 py-1.5 rounded-lg bg-white/5 text-xs font-bold hover:bg-white/10 transition-colors">Monthly</button>
+              <button type="button" className="px-4 py-1.5 rounded-lg bg-white/10 text-xs font-bold hover:bg-[#ff2d2d] transition-colors">Daily</button>
+              <button type="button" className="px-4 py-1.5 rounded-lg bg-white/5 text-xs font-bold hover:bg-white/10 transition-colors">Monthly</button>
             </div>
           </div>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={VIEW_DATA}>
+              <AreaChart data={liveViewData}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ff2d2d" stopOpacity={0.3}/>
@@ -663,6 +706,30 @@ function VideosTab() {
   useEffect(() => { fetchVideos() }, [fetchVideos])
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('videos-tab-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', table: 'Video', schema: 'public' },
+        (payload) => {
+          console.log('[Realtime] Video update:', payload)
+          if (payload.eventType === 'INSERT') {
+            setVideos((prev) => [payload.new as VideoData, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setVideos((prev) => prev.map((v) => (v.id === payload.new.id ? { ...v, ...payload.new } : v)))
+          } else if (payload.eventType === 'DELETE') {
+            setVideos((prev) => prev.filter((v) => v.id === payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   const handleEdit = (video: VideoData) => {
     setEditingId(video.id)
     setEditTitle(video.title)
@@ -671,6 +738,7 @@ function VideosTab() {
   }
 
   const handleSaveEdit = async (id: string) => {
+    console.log('[Admin] Updating video:', id, { title: editTitle, category: editCategory })
     setSaving(true)
     try {
       const res = await fetch(`/api/admin/videos/${id}`, {
@@ -679,20 +747,24 @@ function VideosTab() {
         body: JSON.stringify({ title: editTitle, description: editDesc, category: editCategory }),
       })
       if (res.ok) {
+        console.log('[Admin] Video updated successfully')
         toast({ title: 'Video updated', description: `"${editTitle}" has been updated.` })
         setEditingId(null)
         fetchVideos()
+      } else {
+        const err = await res.text()
+        console.error('[Admin] Failed to update video:', err)
       }
+    } catch (err) {
+      console.error('[Admin] Error saving edit:', err)
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    // 1. Store previous state for rollback
+    console.log('[Admin] Deleting video:', id)
     const previousVideos = [...videos]
-    
-    // 2. Optimistically remove from UI
     setVideos(prev => prev.filter(v => v.id !== id))
     setDeleteId(null)
     setSelectedIds(prev => prev.filter(selectedId => selectedId !== id))
@@ -700,6 +772,7 @@ function VideosTab() {
     try {
       const res = await fetch(`/api/admin/videos/${id}`, { method: 'DELETE' })
       if (res.ok) {
+        console.log('[Admin] Video deleted successfully')
         toast({ 
           title: 'Video deleted', 
           description: 'The video has been removed from the platform.',
@@ -709,7 +782,7 @@ function VideosTab() {
         throw new Error('Failed to delete')
       }
     } catch (err) {
-      // 3. Rollback on failure
+      console.error('[Admin] Deletion failed:', err)
       setVideos(previousVideos)
       toast({ 
         title: 'Error', 
@@ -727,12 +800,10 @@ function VideosTab() {
     const previousVideos = [...videos]
     const idsToDelete = [...selectedIds]
 
-    // Optimistic UI
     setVideos(prev => prev.filter(v => !idsToDelete.includes(v.id)))
     setSelectedIds([])
 
     try {
-      // Delete in parallel
       const results = await Promise.all(
         idsToDelete.map(id => fetch(`/api/admin/videos/${id}`, { method: 'DELETE' }))
       )
@@ -744,7 +815,7 @@ function VideosTab() {
           description: `Deleted ${idsToDelete.length - failedCount} videos, but ${failedCount} failed.`,
           variant: 'destructive'
         })
-        fetchVideos() // Re-sync to see what's left
+        fetchVideos()
       } else {
         toast({ 
           title: 'Bulk delete successful', 
@@ -780,6 +851,7 @@ function VideosTab() {
                <span className="text-xs font-black text-red-500 uppercase">{selectedIds.length} Selected</span>
                <div className="flex items-center gap-2 border-l border-red-500/20 ml-2 pl-3">
                  <button 
+                   type="button"
                    onClick={() => {
                      if (selectedIds.length === videos.length) setSelectedIds([])
                      else setSelectedIds(videos.map(v => v.id))
@@ -789,6 +861,7 @@ function VideosTab() {
                    {selectedIds.length === videos.length ? 'Deselect All' : 'Select All'}
                  </button>
                  <button 
+                   type="button"
                    onClick={handleBulkDelete}
                    disabled={bulkDeleting}
                    className="px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-lg hover:bg-red-600 transition-all uppercase tracking-widest disabled:opacity-50"
@@ -810,12 +883,14 @@ function VideosTab() {
            </div>
            <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
               <button 
+                type="button"
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[#ff2d2d] text-white' : 'text-gray-500 hover:text-white'}`}
               >
                  <LayoutDashboard className="w-4 h-4" />
               </button>
               <button 
+                type="button"
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-[#ff2d2d] text-white' : 'text-gray-500 hover:text-white'}`}
               >
@@ -836,9 +911,9 @@ function VideosTab() {
               selectedIds.includes(video.id) ? 'border-[#ff2d2d] ring-1 ring-[#ff2d2d]/50' : 'border-white/10 hover:border-white/20'
             }`}
           >
-            {/* Selection Checkbox */}
             <div className={`absolute top-3 left-3 z-20 transition-all duration-300 ${selectedIds.includes(video.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                <button 
+                 type="button"
                  onClick={(e) => { e.stopPropagation(); toggleSelect(video.id) }}
                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                    selectedIds.includes(video.id) ? 'bg-[#ff2d2d] border-[#ff2d2d]' : 'bg-black/40 border-white/30 hover:border-white'
@@ -851,7 +926,7 @@ function VideosTab() {
             <div className="relative aspect-video bg-black/40 overflow-hidden">
                <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <button onClick={() => useAppStore.getState().openPlayer(video.id)} className="p-3 bg-[#ff2d2d] rounded-full shadow-lg shadow-[#ff2d2d]/40">
+                  <button type="button" onClick={() => useAppStore.getState().openPlayer(video.id)} className="p-3 bg-[#ff2d2d] rounded-full shadow-lg shadow-[#ff2d2d]/40">
                      <Play className="w-5 h-5 fill-white" />
                   </button>
                </div>
@@ -864,7 +939,7 @@ function VideosTab() {
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h4 className="text-sm font-bold text-white line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="relative group/menu">
-                   <button className="p-1 hover:bg-white/5 rounded-lg">
+                   <button type="button" className="p-1 hover:bg-white/5 rounded-lg">
                       <MoreVertical className="w-4 h-4 text-gray-500" />
                    </button>
                 </div>
@@ -893,10 +968,10 @@ function VideosTab() {
                     <span>{formatNumber(video.views)}</span>
                  </div>
                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit(video)} className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-all">
+                    <button type="button" onClick={() => handleEdit(video)} className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-all">
                        <Edit3 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setDeleteId(video.id)} className="p-2 hover:bg-[#ff2d2d]/10 text-gray-400 hover:text-[#ff2d2d] rounded-xl transition-all">
+                    <button type="button" onClick={() => setDeleteId(video.id)} className="p-2 hover:bg-[#ff2d2d]/10 text-gray-400 hover:text-[#ff2d2d] rounded-xl transition-all">
                        <Trash2 className="w-4 h-4" />
                     </button>
                  </div>
@@ -906,7 +981,6 @@ function VideosTab() {
         ))}
       </div>
 
-      {/* Delete Confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
            <div className="bg-[#121826] border border-white/10 rounded-3xl p-8 w-full max-w-sm text-center">
@@ -916,8 +990,8 @@ function VideosTab() {
               <h3 className="text-xl font-bold text-white mb-2">Delete Video?</h3>
               <p className="text-sm text-gray-500 mb-8">This action is permanent and cannot be undone.</p>
               <div className="flex gap-4">
-                 <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-2xl font-bold transition-all">Cancel</button>
-                 <button onClick={() => handleDelete(deleteId)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-2xl font-bold transition-all">Delete</button>
+                 <button type="button" onClick={() => setDeleteId(null)} className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-2xl font-bold transition-all">Cancel</button>
+                 <button type="button" onClick={() => handleDelete(deleteId)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-2xl font-bold transition-all">Delete</button>
               </div>
            </div>
         </div>
@@ -995,6 +1069,7 @@ function CategoriesTab() {
                />
             </div>
             <button 
+              type="button"
               onClick={handleCreate}
               disabled={creating || !newCatName}
               className="px-8 py-4 bg-[#ff2d2d] hover:bg-[#e62626] rounded-2xl font-bold shadow-lg shadow-[#ff2d2d]/30 transition-all disabled:opacity-50"
@@ -1018,7 +1093,7 @@ function CategoriesTab() {
                  <div className="w-12 h-12 bg-[#ff2d2d]/10 rounded-2xl flex items-center justify-center">
                     <FolderOpen className="w-6 h-6 text-[#ff2d2d]" />
                  </div>
-                 <button onClick={() => handleDelete(cat.id)} className="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-xl transition-all">
+                 <button type="button" onClick={() => handleDelete(cat.id)} className="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-xl transition-all">
                     <Trash2 className="w-4 h-4" />
                  </button>
               </div>
@@ -1061,12 +1136,17 @@ function UploadTab() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!videoFile || !title) return
+    console.log('[Admin] Starting video upload:', title)
+    if (!videoFile || !title) {
+      console.warn('[Admin] Upload cancelled: Missing file or title')
+      return
+    }
 
     setUploading(true)
     setUploadProgress(0)
 
     try {
+      console.log('[Admin] Requesting R2 presigned URL...')
       const presignedRes = await fetch('/api/admin/upload/presigned', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1075,6 +1155,7 @@ function UploadTab() {
 
       if (!presignedRes.ok) throw new Error('Failed to get upload URL')
       const { uploadUrl, publicUrl, videoId } = await presignedRes.json()
+      console.log('[Admin] Presigned URL received for videoId:', videoId)
 
       const xhr = new XMLHttpRequest()
       xhr.open('PUT', uploadUrl)
@@ -1086,7 +1167,8 @@ function UploadTab() {
 
       xhr.onload = async () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          await fetch('/api/admin/upload', {
+          console.log('[Admin] R2 upload complete, finalizing Supabase metadata...')
+          const finalRes = await fetch('/api/admin/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1094,15 +1176,27 @@ function UploadTab() {
               filePath: publicUrl, size: videoFile.size, duration: '0:00'
             })
           })
-          toast({ title: 'Success!', description: 'Video uploaded and processing.' })
-          setTitle(''); setDescription(''); setVideoFile(null); setPreviewUrl(null); setUploadProgress(0)
+          
+          if (finalRes.ok) {
+             console.log('[Admin] Video published successfully (R2 + Supabase Realtime)')
+             toast({ title: 'Success!', description: 'Video uploaded and processing.' })
+             setTitle(''); setDescription(''); setVideoFile(null); setPreviewUrl(null); setUploadProgress(0)
+          } else {
+             console.error('[Admin] Metadata finalization failed')
+          }
         } else {
+          console.error('[Admin] R2 upload failed with status:', xhr.status)
           throw new Error('Upload failed')
         }
         setUploading(false)
       }
+      xhr.onerror = () => {
+        console.error('[Admin] XHR Network error during R2 upload')
+        setUploading(false)
+      }
       xhr.send(videoFile)
     } catch (err: any) {
+      console.error('[Admin] R2 Upload process error:', err)
       setUploading(false)
       toast({ title: 'Failed', description: err.message, variant: 'destructive' })
     }
@@ -1158,7 +1252,7 @@ function UploadTab() {
                        <span className="w-2 h-2 rounded-full bg-[#ff2d2d] animate-pulse" />
                        LIVE PREVIEW
                     </div>
-                    <button onClick={() => {setVideoFile(null); setPreviewUrl(null)}} className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-md hover:bg-red-500/80 rounded-xl border border-white/10 transition-all opacity-0 group-hover:opacity-100">
+                    <button type="button" onClick={() => {setVideoFile(null); setPreviewUrl(null)}} className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-md hover:bg-red-500/80 rounded-xl border border-white/10 transition-all opacity-0 group-hover:opacity-100">
                        <Trash2 className="w-4 h-4 text-white" />
                     </button>
                  </div>

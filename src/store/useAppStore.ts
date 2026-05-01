@@ -54,7 +54,7 @@ interface AppState {
   setCurrentView: (view: ViewMode) => void
   setSelectedVideoId: (id: string | null) => void
   setSelectedCategory: (category: string) => void
-  setVideos: (videos: VideoData[]) => void
+  setVideos: (videos: VideoData[] | ((prev: VideoData[]) => VideoData[])) => void
   setVideosLoading: (loading: boolean) => void
   setVideosTotal: (total: number) => void
   setCategories: (categories: CategoryData[]) => void
@@ -77,8 +77,8 @@ export const useAppStore = create<AppState>((set) => ({
   videosLoading: false,
   videosTotal: 0,
   categories: [],
-  isAdmin: false,
-  adminToken: null,
+  isAdmin: typeof window !== 'undefined' ? !!localStorage.getItem('xtube-admin-token') : false,
+  adminToken: typeof window !== 'undefined' ? localStorage.getItem('xtube-admin-token') : null,
   adminTab: 'dashboard',
   showAdminLogin: false,
   searchQuery: '',
@@ -87,7 +87,9 @@ export const useAppStore = create<AppState>((set) => ({
   setCurrentView: (currentView) => set({ currentView }),
   setSelectedVideoId: (selectedVideoId) => set({ selectedVideoId }),
   setSelectedCategory: (selectedCategory) => set({ selectedCategory }),
-  setVideos: (videos) => set({ videos }),
+  setVideos: (videos) => set((state) => ({ 
+    videos: typeof videos === 'function' ? videos(state.videos) : videos 
+  })),
   setVideosLoading: (videosLoading) => set({ videosLoading }),
   setVideosTotal: (videosTotal) => set({ videosTotal }),
   setCategories: (categories) => set({ categories }),

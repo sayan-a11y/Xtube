@@ -11,6 +11,7 @@ import { Flame, Clock, Star, TrendingUp, Film, MoreVertical, CheckCircle2 } from
 import { useEffect, useMemo, useCallback, useState } from 'react'
 import VideoCard from '@/components/xtube/VideoCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { supabase } from '@/lib/supabase'
 
 export default function Home() {
   const currentView = useAppStore(s => s.currentView)
@@ -84,6 +85,28 @@ export default function Home() {
       }
     }
   }, [mounted, setIsAdmin, setAdminToken])
+
+  // Supabase Realtime for Public UI
+  useEffect(() => {
+    if (!mounted) return
+    
+    const channel = supabase
+      .channel('public-video-updates')
+      .on('postgres_changes', { event: '*', table: 'Video', schema: 'public' }, (payload) => {
+        console.log('[Public Realtime] Change detected:', payload)
+        if (payload.eventType === 'INSERT') {
+          // Add new video if it matches current search/category (simplified: just add it)
+          setVideos((prev) => [payload.new as VideoData, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          setVideos((prev) => prev.map((v) => (v.id === payload.new.id ? { ...v, ...payload.new } : v)))
+        } else if (payload.eventType === 'DELETE') {
+          setVideos((prev) => prev.filter((v) => v.id === payload.old.id))
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [mounted, setVideos])
 
   // Categorize videos for rows
   const trendingVideos = useMemo(() => {
