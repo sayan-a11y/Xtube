@@ -46,8 +46,30 @@ export default function Navbar() {
   }, [])
 
   const handleLogoClick = useCallback(() => {
-    goHome()
-  }, [goHome])
+    // Mobile: Refresh website
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      window.location.reload()
+      return
+    }
+
+    // Tablet/PC: 7-tap secret admin access
+    clickCountRef.current += 1
+    
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current)
+    }
+
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0
+    }, 2000)
+
+    if (clickCountRef.current >= 7) {
+      setShowAdminLogin(true)
+      clickCountRef.current = 0
+    } else {
+      goHome()
+    }
+  }, [goHome, setShowAdminLogin])
 
   const handleNavClick = useCallback(
     (key: NavKey) => {
