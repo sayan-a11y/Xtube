@@ -13,6 +13,7 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   const [isHovering, setIsHovering] = useState(false)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -96,15 +97,28 @@ export default function VideoCard({ video }: VideoCardProps) {
     >
       {/* Thumbnail container */}
       <div className="aspect-video relative rounded-2xl overflow-hidden bg-[#1a1a1a] shadow-lg transition-all duration-300 group-hover:rounded-none group-hover:scale-105 group-hover:shadow-2xl z-0 group-hover:z-10">
-        <img
-          src={video.thumbnail}
-          alt={video.title}
-          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
-            isPreviewPlaying ? 'opacity-0' : 'opacity-100'
-          }`}
-          loading="lazy"
-          draggable={false}
-        />
+        {!imgError ? (
+          <img
+            src={video.thumbnail}
+            alt={video.title}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+              isPreviewPlaying ? 'opacity-0' : 'opacity-100'
+            }`}
+            loading="lazy"
+            draggable={false}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <video
+            src={`${video.filePath}#t=1`}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+              isPreviewPlaying ? 'opacity-0' : 'opacity-100'
+            }`}
+            muted
+            playsInline
+            preload="metadata"
+          />
+        )}
 
         {/* Video preview layer */}
         {isPreviewPlaying && (
