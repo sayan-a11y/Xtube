@@ -645,7 +645,7 @@ export default function PlayerView() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pt-16 md:pt-20">
       <div className="max-w-[2000px] mx-auto px-0 md:px-6 lg:px-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] gap-0 md:gap-8">
           {/* ── Main Content ──────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
             {/* ── Player Area ──────────────────────────────────────────────── */}
@@ -693,18 +693,27 @@ export default function PlayerView() {
                           : 'rounded-l-full'
                       }`}
                     >
-                      <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                        <span className="text-white font-bold text-xl">
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 shadow-xl">
+                        <span className="text-white font-black text-xl tracking-tighter">
                           {showSeekOverlay === 'left' ? '-10s' : '+10s'}
                         </span>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1.5">
                         {[0, 1, 2].map((i) => (
                           <motion.div
                             key={i}
-                            animate={{ opacity: [0, 1, 0], x: showSeekOverlay === 'left' ? [0, -10] : [0, 10] }}
-                            transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
-                            className="text-white"
+                            initial={{ opacity: 0, x: 0 }}
+                            animate={{ 
+                              opacity: [0, 1, 0], 
+                              x: showSeekOverlay === 'left' ? [-10, -25, -40] : [10, 25, 40] 
+                            }}
+                            transition={{ 
+                              repeat: Infinity, 
+                              duration: 0.5, 
+                              delay: i * 0.1,
+                              ease: "easeOut"
+                            }}
+                            className="text-white/60"
                           >
                             {showSeekOverlay === 'left' ? '◀' : '▶'}
                           </motion.div>
@@ -717,8 +726,11 @@ export default function PlayerView() {
 
               {/* Buffering Indicator */}
               {isBuffering && isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                  <Loader2 className="w-16 h-16 text-[#ff2d2d] animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-20 pointer-events-none">
+                  <div className="relative">
+                    <Loader2 className="w-16 h-16 text-[#ff0000] animate-spin" />
+                    <div className="absolute inset-0 blur-xl bg-[#ff0000]/20 rounded-full animate-pulse" />
+                  </div>
                 </div>
               )}
 
@@ -728,9 +740,13 @@ export default function PlayerView() {
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   onClick={togglePlay}
                 >
-                  <div className="w-20 h-20 rounded-full bg-[#ff2d2d]/90 flex items-center justify-center shadow-2xl transition-transform hover:scale-110">
-                    <Play className="w-8 h-8 text-white fill-white ml-1" />
-                  </div>
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-20 h-20 rounded-full bg-[#ff0000]/90 flex items-center justify-center shadow-[0_0_50px_rgba(255,0,0,0.3)] backdrop-blur-sm"
+                  >
+                    <Play className="w-9 h-9 text-white fill-white ml-1.5" />
+                  </motion.div>
                 </div>
               )}
 
@@ -800,11 +816,11 @@ export default function PlayerView() {
                     />
                     {/* Progress */}
                     <div
-                      className="h-full bg-[#ff0000] rounded-full relative transition-none"
+                      className="h-full bg-[#ff0000] rounded-full relative transition-none shadow-[0_0_15px_rgba(255,0,0,0.5)]"
                       style={{ width: `${seekProgress}%` }}
                     >
                       {/* Thumb */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff0000] rounded-full shadow-lg opacity-0 group-hover/seek:opacity-100 transition-opacity" />
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff0000] rounded-full shadow-[0_0_10px_rgba(255,0,0,0.8)] opacity-0 group-hover/seek:opacity-100 transition-opacity ring-2 ring-white/20" />
                     </div>
                   </div>
 
@@ -1035,16 +1051,16 @@ export default function PlayerView() {
               </div>
 
               {/* Description Box */}
-              <div className="mt-4 bg-[#272727] rounded-xl p-3 hover:bg-[#3f3f3f] transition-colors cursor-pointer group" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm mb-1">
-                  <span>{formatViews(video.views)}</span>
-                  <span>{formatDate(video.createdAt)}</span>
+              <div className="mt-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 hover:bg-[#222222] transition-all cursor-pointer group shadow-lg" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
+                <div className="flex items-center gap-3 text-white font-bold text-sm mb-2">
+                  <span className="bg-white/10 px-2 py-0.5 rounded">{formatViews(video.views)}</span>
+                  <span className="text-gray-400">{formatDate(video.createdAt)}</span>
                 </div>
-                <div className={`text-white text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
+                <div className={`text-gray-200 text-sm leading-relaxed ${!descriptionExpanded ? 'line-clamp-2' : ''}`}>
                   {video.description || "No description available for this video."}
                 </div>
-                <button className="text-white text-sm font-bold mt-1">
-                  {descriptionExpanded ? 'Show less' : '...more'}
+                <button className="text-[#ff0000] text-xs font-black uppercase tracking-widest mt-2 hover:brightness-125 transition-all">
+                  {descriptionExpanded ? 'Show less' : 'Read more'}
                 </button>
               </div>
             </div>
