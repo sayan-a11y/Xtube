@@ -29,9 +29,16 @@ export async function POST(request: NextRequest) {
           thumbnail: thumbnail || 'https://via.placeholder.com/640x360/0b0f1a/475569?text=Processing...',
           hlsPath: hlsPath || '',
           duration: duration || '0:00',
+          status: 'processing',
           size: size || 0,
         },
       })
+
+      // Trigger HLS Processing (Background)
+      import('@/lib/hls-processor').then(({ processVideoHLS }) => {
+        processVideoHLS(video.id).catch(console.error)
+      })
+
       return NextResponse.json({ success: true, video })
     }
 

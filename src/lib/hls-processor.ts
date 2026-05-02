@@ -16,13 +16,26 @@ const QUALITIES = [
   { name: '2160p', resolution: '3840x2160', bitrate: '20000k' },
 ];
 
-export async function processVideoHLS(videoId: string, inputBuffer: Buffer) {
+export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
   const tempDir = join(process.cwd(), 'tmp-hls', videoId);
   const inputPath = join(tempDir, 'input.mp4');
   
   try {
     await mkdir(tempDir, { recursive: true });
-    await writeFile(inputPath, inputBuffer);
+    
+    if (inputBuffer) {
+      await writeFile(inputPath, inputBuffer);
+    } else {
+      // Fetch from database to get the filePath if not provided
+      const video = await db.video.findUnique({ where: { id: videoId } });
+      if (!video || !video.filePath) throw new Error('Video not found or filePath missing');
+      
+      console.log(`Downloading video from ${video.filePath} for processing...`);
+      const response = await fetch(video.filePath);
+      if (!response.ok) throw new Error(`Failed to fetch video: ${response.statusText}`);
+      const arrayBuffer = await response.arrayBuffer();
+      await writeFile(inputPath, Buffer.from(arrayBuffer));
+    }
 
     // 0. Generate Thumbnail & Preview Sprites
     const thumbnailPath = join(tempDir, 'thumbnail.jpg');

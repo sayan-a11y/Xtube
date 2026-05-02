@@ -167,6 +167,11 @@ export default function Home() {
       <AgeGate />
       <Navbar />
 
+      {/* Hero Section */}
+      {currentView === 'home' && selectedCategory === 'All' && !searchQuery && (
+        <HeroSection />
+      )}
+
       {/* Admin Login Modal */}
       {showAdminLogin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
@@ -251,7 +256,19 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="px-4 md:px-6 lg:px-8 mt-6">
+          {/* Hero Content Rows (Netflix Style) */}
+          {currentView === 'home' && selectedCategory === 'All' && !searchQuery && (
+            <div className="mt-8 space-y-12">
+              <ContentRow title="Trending Now" videos={trendingVideos} icon={<Flame className="w-6 h-6 text-orange-500" />} />
+              <ContentRow title="Recently Added" videos={recentVideos} icon={<Clock className="w-6 h-6 text-blue-500" />} />
+              <ContentRow title="Top Rated" videos={topRatedVideos} icon={<Star className="w-6 h-6 text-yellow-500" />} />
+            </div>
+          )}
+
+          <div className="px-4 md:px-6 lg:px-8 mt-12">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              {searchQuery ? `Search Results: ${searchQuery}` : selectedCategory !== 'All' ? `${selectedCategory} Videos` : 'All Videos'}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-10">
               {videosLoading ? (
                 Array.from({ length: 15 }).map((_, i) => (
