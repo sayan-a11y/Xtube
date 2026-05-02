@@ -4,6 +4,7 @@ import { useAppStore, VideoData } from '@/store/useAppStore'
 import { Play, Info } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import Image from 'next/image'
 
 const AUTO_ADVANCE_INTERVAL = 6000
 const MAX_HERO_SLIDES = 5
@@ -119,11 +120,23 @@ export default function HeroSection() {
           {/* Fallback gradient behind image */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
           {/* Thumbnail */}
-          <img
-            src={video.thumbnail}
-            alt={video.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          {(video.thumbnail && !video.thumbnail.includes('placeholder')) ? (
+            <Image
+              src={video.thumbnail}
+              alt={video.title}
+              fill
+              priority={index === currentIndex}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <video
+              src={`${video.filePath}#t=1`}
+              className="absolute inset-0 w-full h-full object-cover"
+              muted
+              playsInline
+              preload="metadata"
+            />
+          )}
         </div>
       ))}
 

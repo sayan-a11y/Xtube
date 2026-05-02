@@ -23,6 +23,11 @@ model Video {
   status      String   @default("ready")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([title])
+  @@index([createdAt])
+  @@index([views])
 }
 
 model Category {

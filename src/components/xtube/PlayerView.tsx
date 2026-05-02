@@ -29,6 +29,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1154,6 +1155,8 @@ interface RelatedVideoItemProps {
 }
 
 function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) {
+  const [imgError, setImgError] = useState(false)
+
   return (
     <div
       className={`flex gap-3 group cursor-pointer ${isCurrent ? 'opacity-50' : ''}`}
@@ -1161,12 +1164,24 @@ function RelatedVideoItem({ video, isCurrent, onClick }: RelatedVideoItemProps) 
     >
       {/* Thumbnail */}
       <div className="relative w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5">
-        <img
-          src={video.thumbnail}
-          alt={video.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
+        {(!imgError && video.thumbnail && !video.thumbnail.includes('placeholder')) ? (
+          <Image
+            src={video.thumbnail}
+            alt={video.title}
+            fill
+            sizes="160px"
+            className="object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <video
+            src={`${video.filePath}#t=1`}
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        )}
         <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[11px] font-medium px-1.5 py-0.5 rounded-md">
           {video.duration}
         </div>

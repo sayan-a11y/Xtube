@@ -2,13 +2,14 @@
 
 import { useAppStore, VideoData } from '@/store/useAppStore'
 import { Play, Clock, MoreVertical, CheckCircle2 } from 'lucide-react'
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, memo } from 'react'
+import Image from 'next/image'
 
 interface VideoCardProps {
   video: VideoData
 }
 
-export default function VideoCard({ video }: VideoCardProps) {
+export default memo(function VideoCard({ video }: VideoCardProps) {
   const openPlayer = useAppStore((s) => s.openPlayer)
 
   const [isHovering, setIsHovering] = useState(false)
@@ -147,13 +148,14 @@ export default function VideoCard({ video }: VideoCardProps) {
       {/* Thumbnail container */}
       <div className="aspect-video relative rounded-xl overflow-hidden bg-white/5 transition-all duration-300 z-0">
         {(!imgError && video.thumbnail && !video.thumbnail.includes('placeholder')) ? (
-          <img
+          <Image
             src={video.thumbnail}
             alt={video.title}
-            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
               isPreviewPlaying ? 'opacity-0' : 'opacity-100'
             }`}
-            loading="lazy"
             draggable={false}
             onError={() => setImgError(true)}
           />
@@ -223,4 +225,4 @@ export default function VideoCard({ video }: VideoCardProps) {
       </div>
     </div>
   )
-}
+})

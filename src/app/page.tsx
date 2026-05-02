@@ -2,16 +2,19 @@
 
 import { useAppStore, VideoData, CategoryData } from '@/store/useAppStore'
 import Navbar from '@/components/xtube/Navbar'
-import HeroSection from '@/components/xtube/HeroSection'
-import ContentRow from '@/components/xtube/ContentRow'
-import PlayerView from '@/components/xtube/PlayerView'
-import AdminPanel from '@/components/xtube/AdminPanel'
-import AgeGate from '@/components/xtube/AgeGate'
+import dynamic from 'next/dynamic'
 import { Flame, Clock, Star, TrendingUp, Film, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { useEffect, useMemo, useCallback, useState } from 'react'
 import VideoCard from '@/components/xtube/VideoCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
+
+// Lazy load large components for performance
+const HeroSection = dynamic(() => import('@/components/xtube/HeroSection'), { ssr: false })
+const ContentRow = dynamic(() => import('@/components/xtube/ContentRow'), { ssr: false })
+const PlayerView = dynamic(() => import('@/components/xtube/PlayerView'), { ssr: false })
+const AdminPanel = dynamic(() => import('@/components/xtube/AdminPanel'), { ssr: false })
+const AgeGate = dynamic(() => import('@/components/xtube/AgeGate'), { ssr: false })
 
 export default function Home() {
   const currentView = useAppStore(s => s.currentView)

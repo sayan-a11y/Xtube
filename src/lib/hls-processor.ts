@@ -40,20 +40,27 @@ export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
     // 0. Generate Thumbnail & Preview Sprites
     const thumbnailPath = join(tempDir, 'thumbnail.jpg');
     console.log('Generating thumbnail...');
-    await execAsync(`ffmpeg -i "${inputPath}" -ss 00:00:01 -vframes 1 -q:v 2 "${thumbnailPath}"`);
+    // Fast seek: -ss before -i
+    await execAsync(`ffmpeg -ss 00:00:01 -i "${inputPath}" -vframes 1 -q:v 2 "${thumbnailPath}"`);
     const thumbnailBuffer = await readFile(thumbnailPath);
     const thumbnailUrl = await uploadToR2(thumbnailBuffer, `videos/${videoId}/thumbnail.jpg`, 'image/jpeg');
 
-    // Generate Preview Sprite (simple one for now)
-    // In production, you'd loop and create a sheet, here we create a mid-frame preview
+    // Update DB early with thumbnail so UI reflects progress
+    await db.video.update({
+      where: { id: videoId },
+      data: { thumbnail: thumbnailUrl }
+    });
+
+    // Generate Preview Sprite
     const previewPath = join(tempDir, 'preview.jpg');
-    await execAsync(`ffmpeg -i "${inputPath}" -ss 00:00:05 -vframes 1 -s 320x180 -q:v 5 "${previewPath}"`);
+    await execAsync(`ffmpeg -ss 00:00:05 -i "${inputPath}" -vframes 1 -s 320x180 -q:v 5 "${previewPath}"`);
     const previewBuffer = await readFile(previewPath);
-    const previewUrl = await uploadToR2(previewBuffer, `videos/${videoId}/preview.jpg`, 'image/jpeg');
+    await uploadToR2(previewBuffer, `videos/${videoId}/preview.jpg`, 'image/jpeg');
 
     // 1. Generate Variants
     const masterPlaylistLines = ['#EXTM3U', '#EXT-X-VERSION:3'];
 
+    // We only generate top 3 qualities for speed if needed, but let's stick to the list and use fast presets
     for (const quality of QUALITIES) {
       const variantDir = join(tempDir, quality.name);
       await mkdir(variantDir, { recursive: true });
@@ -63,13 +70,11 @@ export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
 
       console.log(`Processing quality: ${quality.name}`);
       
-      // FFmpeg command for HLS segmenting and scaling
-      // Using libx264 for compatibility, fastpreset for speed
+      // Using superfast preset for even better speed
       await execAsync(
-        `ffmpeg -i "${inputPath}" -vf "scale=${quality.resolution}" -c:v libx264 -preset veryfast -b:v ${quality.bitrate} -maxrate ${quality.bitrate} -bufsize ${quality.bitrate} -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type prev -hls_segment_filename "${variantDir}/seg_%03d.ts" "${variantPath}"`
+        `ffmpeg -i "${inputPath}" -vf "scale=${quality.resolution}" -c:v libx264 -preset superfast -b:v ${quality.bitrate} -maxrate ${quality.bitrate} -bufsize ${quality.bitrate} -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename "${variantDir}/seg_%03d.ts" "${variantPath}"`
       );
 
-      // Add to master playlist
       masterPlaylistLines.push(
         `#EXT-X-STREAM-INF:BANDWIDTH=${parseInt(quality.bitrate) * 1000},RESOLUTION=${quality.resolution}`,
         `${quality.name}/${variantPlaylist}`
@@ -79,29 +84,34 @@ export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
     const masterPath = join(tempDir, 'master.m3u8');
     await writeFile(masterPath, masterPlaylistLines.join('\n'));
 
-    // 2. Upload everything to R2
+    // 2. Upload everything to R2 (Parallelized for speed)
     console.log('Uploading HLS package to R2...');
     
-    // Upload variants and segments
+    const uploadPromises: Promise<any>[] = [];
+
     for (const quality of QUALITIES) {
       const variantDir = join(tempDir, quality.name);
       const files = await readdir(variantDir);
       for (const file of files) {
-        const content = await readFile(join(variantDir, file));
-        await uploadToR2(content, `videos/${videoId}/hls/${quality.name}/${file}`, file.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/MP2T');
+        uploadPromises.push((async () => {
+          const content = await readFile(join(variantDir, file));
+          await uploadToR2(content, `videos/${videoId}/hls/${quality.name}/${file}`, file.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/MP2T');
+        })());
       }
     }
+
+    // Wait for all segments to upload
+    await Promise.all(uploadPromises);
 
     // Upload master
     const masterContent = await readFile(masterPath);
     const masterPublicUrl = await uploadToR2(masterContent, `videos/${videoId}/hls/master.m3u8`, 'application/vnd.apple.mpegurl');
 
-    // 3. Update Database
+    // 3. Update Database (Final)
     await db.video.update({
       where: { id: videoId },
       data: {
         hlsPath: masterPublicUrl,
-        thumbnail: thumbnailUrl,
         status: 'ready'
       } as any
     });
