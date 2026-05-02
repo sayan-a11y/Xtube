@@ -118,6 +118,12 @@ export default function PlayerView() {
   const [commentInput, setCommentInput] = useState('')
   const [ccEnabled, setCcEnabled] = useState(false)
   const [showCcToast, setShowCcToast] = useState(false)
+  
+  // Scrubbing state
+  const [isDragging, setIsDragging] = useState(false)
+  const [hoverTime, setHoverTime] = useState<number | null>(null)
+  const [hoverPos, setHoverPos] = useState(0)
+  const [previewActive, setPreviewActive] = useState(false)
 
   // Destructure for convenience
   const { video, loading, error, isPlaying, currentTime, duration, isBuffering, buffered, liked, likeCount, showCountdown, countdown } = playerState
@@ -133,6 +139,14 @@ export default function PlayerView() {
   const speedMenuRef = useRef<HTMLDivElement>(null)
   const lastTapTimeRef = useRef<number>(0)
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previewVideoRef = useRef<HTMLVideoElement>(null)
+
+  // Sync preview video with hover time
+  useEffect(() => {
+    if (previewActive && hoverTime !== null && previewVideoRef.current) {
+      previewVideoRef.current.currentTime = hoverTime
+    }
+  }, [previewActive, hoverTime])
 
   // ── Related Videos ───────────────────────────────────────────────────────
   const relatedVideos = useMemo(() => {
@@ -506,19 +520,59 @@ export default function PlayerView() {
   }, [])
 
   // ── Seek Bar Interaction ─────────────────────────────────────────────────
-  const handleSeekClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  const updateSeek = useCallback(
+    (clientX: number) => {
       const vid = videoRef.current
       const bar = seekRef.current
       if (!vid || !bar || !duration) return
 
       const rect = bar.getBoundingClientRect()
-      const pos = (e.clientX - rect.left) / rect.width
-      vid.currentTime = pos * duration
+      const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      const newTime = pos * duration
+      
+      setHoverPos(pos * 100)
+      setHoverTime(newTime)
+      
+      return { pos, newTime }
+    },
+    [duration]
+  )
+
+  const handleSeekClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>) => {
+      const result = updateSeek(e.clientX)
+      if (result && videoRef.current) {
+        videoRef.current.currentTime = result.newTime
+      }
       resetControlsTimeout()
     },
-    [duration, resetControlsTimeout]
+    [updateSeek, resetControlsTimeout]
   )
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(true)
+    setPreviewActive(true)
+    handleSeekClick(e)
+    if (e.currentTarget.setPointerCapture) {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const result = updateSeek(e.clientX)
+    if (isDragging && result && videoRef.current) {
+      videoRef.current.currentTime = result.newTime
+    }
+    if (!previewActive) setPreviewActive(true)
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false)
+    setPreviewActive(false)
+    if (e.currentTarget.releasePointerCapture) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+  }
 
   // ── Volume Slider Interaction ────────────────────────────────────────────
   const handleVolumeClick = useCallback(
@@ -730,7 +784,7 @@ export default function PlayerView() {
                 if (isPlaying) setShowControls(false)
               }}
               style={{ 
-                cursor: showControls ? 'default' : 'none',
+                cursor: showControls ? 'default' : (typeof window !== 'undefined' && window.matchMedia("(pointer: coarse)").matches ? 'default' : 'none'),
                 WebkitTapHighlightColor: 'transparent'
               }}
             >
@@ -864,7 +918,7 @@ export default function PlayerView() {
                         e.stopPropagation();
                         handleBack();
                       }}
-                      className="flex items-center gap-2 text-white/90 hover:text-white transition-colors relative z-[100] pointer-events-auto p-2 -m-2"
+                      className="flex items-center gap-2 text-white/90 hover:text-white transition-colors relative z-[100] pointer-events-auto p-3 -m-3"
                       aria-label="Back to home"
                     >
                       <ChevronLeft className="w-7 h-7" />
@@ -877,16 +931,54 @@ export default function PlayerView() {
                   {/* Seek Bar - Enhanced Touch Area */}
                   <div
                     ref={seekRef}
-                    className="absolute top-0 left-0 right-0 h-4 -translate-y-1/2 cursor-pointer group/seek flex items-center"
-                    onClick={handleSeekClick}
+                    className="absolute top-0 left-0 right-0 h-6 -translate-y-1/2 cursor-pointer group/seek flex items-center z-50"
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={() => !isDragging && setPreviewActive(false)}
+                    style={{ touchAction: 'none' }}
                   >
-                    <div className="w-full h-1 bg-white/20 relative rounded-full overflow-hidden">
-                      <div className="h-full bg-[#ff2d2d] transition-none" style={{ width: `${seekProgress}%` }} />
+                    {/* Scrubbing Preview */}
+                    <AnimatePresence>
+                      {previewActive && hoverTime !== null && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                          className="absolute bottom-full mb-4 pointer-events-none"
+                          style={{ 
+                            left: `${hoverPos}%`,
+                            transform: `translateX(-50%)`
+                          }}
+                        >
+                          <div className="relative group/preview">
+                            <div className="w-48 aspect-video rounded-lg overflow-hidden bg-black border-2 border-white/20 shadow-2xl relative">
+                              <video
+                                ref={previewVideoRef}
+                                src={video.filePath}
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            </div>
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#ff2d2d] text-white text-[11px] font-black px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
+                              {formatTime(hoverTime)}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="w-full h-1.5 bg-white/20 relative rounded-full overflow-hidden transition-all group-hover/seek:h-2">
+                      <div className="h-full bg-[#ff2d2d] transition-none relative" style={{ width: `${seekProgress}%` }}>
+                        <div className="absolute top-0 right-0 h-full w-20 bg-gradient-to-r from-transparent to-white/20" />
+                      </div>
                     </div>
                     {/* Scrubbing Handle */}
                     <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#ff2d2d] rounded-full shadow-xl scale-0 group-hover/seek:scale-100 transition-transform z-10"
-                      style={{ left: `calc(${seekProgress}% - 7px)` }}
+                      className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#ff2d2d] rounded-full shadow-[0_0_15px_rgba(255,45,45,0.5)] border-2 border-white transition-transform z-10 ${isDragging ? 'scale-125' : 'scale-0 group-hover/seek:scale-100'}`}
+                      style={{ left: `calc(${seekProgress}% - 8px)` }}
                     />
                   </div>
 
@@ -915,7 +1007,7 @@ export default function PlayerView() {
                           setTimeout(() => setShowCcToast(false), 2000)
                         }}
                       >
-                        <Subtitles className="w-5 h-5" />
+                        <Subtitles className="w-6 h-6" />
                         {ccEnabled && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-0.5 bg-[#ff2d2d] rounded-full" />}
                         <AnimatePresence>
                           {showCcToast && (
@@ -941,7 +1033,7 @@ export default function PlayerView() {
                             setShowSpeedMenu(false);
                           }}
                         >
-                          <Settings className="w-5 h-5" />
+                          <Settings className="w-6 h-6" />
                         </button>
                         
                         <AnimatePresence>
@@ -981,7 +1073,7 @@ export default function PlayerView() {
                         className="p-2 text-white/80 hover:text-white transition-colors"
                         onClick={toggleFullscreen}
                       >
-                        <Maximize className="w-5 h-5" />
+                        <Maximize className="w-6 h-6" />
                       </button>
                     </div>
                   </div>
