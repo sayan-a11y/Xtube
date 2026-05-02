@@ -17,12 +17,17 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current)
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect()
       }
       if (videoRef.current) {
         videoRef.current.pause()
@@ -32,9 +37,49 @@ export default function VideoCard({ video }: VideoCardProps) {
     }
   }, [])
 
+  // Handle intersection for mobile/tablet auto-preview
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+    if (!isMobile || !cardRef.current) return
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Delay preview slightly to avoid flickering while scrolling fast
+            hoverTimeoutRef.current = setTimeout(() => {
+              setIsPreviewPlaying(true)
+            }, 600)
+          } else {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current)
+            }
+            setIsPreviewPlaying(false)
+            if (videoRef.current) {
+              videoRef.current.pause()
+            }
+          }
+        })
+      },
+      {
+        threshold: 0.6, // 60% visibility to trigger
+        rootMargin: '0px -10% 0px -10%' // Inset from sides to focus on center
+      }
+    )
+
+    observerRef.current.observe(cardRef.current)
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [])
+
   const handleMouseEnter = useCallback(() => {
-    // Only enable hover preview on desktop
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return
+    // Only use hover on desktop
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024
+    if (!isDesktop) return
 
     setIsHovering(true)
 
@@ -45,6 +90,9 @@ export default function VideoCard({ video }: VideoCardProps) {
   }, [])
 
   const handleMouseLeave = useCallback(() => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024
+    if (!isDesktop) return
+
     setIsHovering(false)
     setIsPreviewPlaying(false)
 
@@ -90,6 +138,7 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
+      ref={cardRef}
       className="group cursor-pointer flex flex-col gap-3 transition-all duration-300"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
