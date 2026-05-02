@@ -63,7 +63,7 @@ interface AppState {
   setAdminTab: (tab: string) => void
   setShowAdminLogin: (show: boolean) => void
   setSearchQuery: (query: string) => void
-  setHeroVideoIndex: (index: number) => void
+  setHeroVideoIndex: (index: number | ((prev: number) => number)) => void
   openPlayer: (videoId: string) => void
   goHome: () => void
   logoutAdmin: () => void
@@ -107,7 +107,9 @@ export const useAppStore = create<AppState>((set) => ({
   setAdminTab: (adminTab) => set({ adminTab }),
   setShowAdminLogin: (showAdminLogin) => set({ showAdminLogin }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setHeroVideoIndex: (heroVideoIndex) => set({ heroVideoIndex }),
+  setHeroVideoIndex: (heroVideoIndex) => set((state) => ({ 
+    heroVideoIndex: typeof heroVideoIndex === 'function' ? heroVideoIndex(state.heroVideoIndex) : heroVideoIndex 
+  })),
   openPlayer: (videoId) => set({ currentView: 'player', selectedVideoId: videoId }),
   goHome: () => set({ currentView: 'home', selectedVideoId: null }),
   logoutAdmin: () => {
