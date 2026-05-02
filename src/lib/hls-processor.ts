@@ -23,25 +23,14 @@ export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
   try {
     await mkdir(tempDir, { recursive: true });
     
-    if (inputBuffer) {
-      await writeFile(inputPath, inputBuffer);
-    } else {
-      // Fetch from database to get the filePath if not provided
-      const video = await db.video.findUnique({ where: { id: videoId } });
-      if (!video || !video.filePath) throw new Error('Video not found or filePath missing');
-      
-      console.log(`Downloading video from ${video.filePath} for processing...`);
-      const response = await fetch(video.filePath);
-      if (!response.ok) throw new Error(`Failed to fetch video: ${response.statusText}`);
-      const arrayBuffer = await response.arrayBuffer();
-      await writeFile(inputPath, Buffer.from(arrayBuffer));
-    }
-
-    // 0. Generate Thumbnail & Preview Sprites
+    // 0. Generate Thumbnail using Remote URL (Very Fast)
     const thumbnailPath = join(tempDir, 'thumbnail.jpg');
-    console.log('Generating thumbnail...');
-    // Fast seek: -ss before -i
-    await execAsync(`ffmpeg -ss 00:00:01 -i "${inputPath}" -vframes 1 -q:v 2 "${thumbnailPath}"`);
+    const video = await db.video.findUnique({ where: { id: videoId } });
+    if (!video || !video.filePath) throw new Error('Video not found or filePath missing');
+
+    console.log('Generating thumbnail from remote URL...');
+    // FFmpeg uses range requests when input is a URL, making this nearly instant
+    await execAsync(`ffmpeg -ss 00:00:01 -i "${video.filePath}" -vframes 1 -q:v 2 "${thumbnailPath}"`);
     const thumbnailBuffer = await readFile(thumbnailPath);
     const thumbnailUrl = await uploadToR2(thumbnailBuffer, `videos/${videoId}/thumbnail.jpg`, 'image/jpeg');
 
@@ -51,11 +40,22 @@ export async function processVideoHLS(videoId: string, inputBuffer?: Buffer) {
       data: { thumbnail: thumbnailUrl }
     });
 
-    // Generate Preview Sprite
+    // Generate Preview Sprite (Using Remote URL - Fast)
     const previewPath = join(tempDir, 'preview.jpg');
-    await execAsync(`ffmpeg -ss 00:00:05 -i "${inputPath}" -vframes 1 -s 320x180 -q:v 5 "${previewPath}"`);
+    await execAsync(`ffmpeg -ss 00:00:05 -i "${video.filePath}" -vframes 1 -s 320x180 -q:v 5 "${previewPath}"`);
     const previewBuffer = await readFile(previewPath);
     await uploadToR2(previewBuffer, `videos/${videoId}/preview.jpg`, 'image/jpeg');
+
+    // 1. Download for HLS Processing (Only if needed)
+    if (inputBuffer) {
+      await writeFile(inputPath, inputBuffer);
+    } else {
+      console.log(`Downloading video for HLS transcoding...`);
+      const response = await fetch(video.filePath);
+      if (!response.ok) throw new Error(`Failed to fetch video: ${response.statusText}`);
+      const arrayBuffer = await response.arrayBuffer();
+      await writeFile(inputPath, Buffer.from(arrayBuffer));
+    }
 
     // 1. Generate Variants
     const masterPlaylistLines = ['#EXTM3U', '#EXT-X-VERSION:3'];
