@@ -146,7 +146,7 @@ export default function VideoCard({ video }: VideoCardProps) {
     >
       {/* Thumbnail container */}
       <div className="aspect-video relative rounded-xl overflow-hidden bg-white/5 transition-all duration-300 z-0">
-        {!imgError ? (
+        {(!imgError && video.thumbnail && !video.thumbnail.includes('placeholder')) ? (
           <img
             src={video.thumbnail}
             alt={video.title}
