@@ -47,10 +47,11 @@ export default memo(function VideoCard({ video }: VideoCardProps) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Delay preview slightly to avoid flickering while scrolling fast
+            // Faster activation for better "fast working" feel
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
             hoverTimeoutRef.current = setTimeout(() => {
               setIsPreviewPlaying(true)
-            }, 600)
+            }, 200) // Reduced from 600ms to 200ms
           } else {
             if (hoverTimeoutRef.current) {
               clearTimeout(hoverTimeoutRef.current)
@@ -63,8 +64,8 @@ export default memo(function VideoCard({ video }: VideoCardProps) {
         })
       },
       {
-        threshold: 0.6, // 60% visibility to trigger
-        rootMargin: '0px -10% 0px -10%' // Inset from sides to focus on center
+        threshold: 0.5, // Reduced from 0.6 to 0.5 for easier trigger
+        rootMargin: '0px'
       }
     )
 
@@ -84,10 +85,10 @@ export default memo(function VideoCard({ video }: VideoCardProps) {
 
     setIsHovering(true)
 
-    // Start video preview after 800ms delay
+    // Start video preview after 300ms delay for desktop
     hoverTimeoutRef.current = setTimeout(() => {
       setIsPreviewPlaying(true)
-    }, 800)
+    }, 300)
   }, [])
 
   const handleMouseLeave = useCallback(() => {
@@ -177,10 +178,11 @@ export default memo(function VideoCard({ video }: VideoCardProps) {
             <video
               ref={videoRef}
               src={video.filePath}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none"
               muted
               playsInline
               loop
+              autoPlay
               onLoadedMetadata={handleLoadedMetadata}
             />
           </div>
