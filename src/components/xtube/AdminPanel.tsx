@@ -1149,7 +1149,26 @@ function UploadTab() {
     setUploading(true)
     setUploadProgress(0)
 
+    // Helper to get duration
+    const getDuration = (file: File): Promise<string> => {
+      return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src);
+          const seconds = Math.floor(video.duration);
+          const m = Math.floor(seconds / 60);
+          const s = seconds % 60;
+          resolve(`${m}:${s.toString().padStart(2, '0')}`);
+        };
+        video.src = URL.createObjectURL(file);
+      });
+    };
+
     try {
+      const duration = await getDuration(videoFile);
+      console.log('[Admin] Extracted duration:', duration);
+
       console.log('[Admin] Requesting R2 presigned URL...')
       const presignedRes = await fetch('/api/admin/upload/presigned', {
         method: 'POST',
@@ -1177,7 +1196,7 @@ function UploadTab() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: videoId, title, description, category,
-              filePath: publicUrl, size: videoFile.size, duration: '0:00'
+              filePath: publicUrl, size: videoFile.size, duration
             })
           })
           
