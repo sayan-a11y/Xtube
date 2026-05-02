@@ -531,6 +531,8 @@ export default function PlayerView() {
       const newTime = pos * duration
       
       setHoverPos(pos * 100)
+      
+      // Throttle hover time updates slightly to avoid too many seeks in the preview video
       setHoverTime(newTime)
       
       return { pos, newTime }
@@ -560,15 +562,20 @@ export default function PlayerView() {
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const result = updateSeek(e.clientX)
-    if (isDragging && result && videoRef.current) {
-      videoRef.current.currentTime = result.newTime
-    }
+    // Only update preview while dragging to avoid lag in main video
     if (!previewActive) setPreviewActive(true)
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false)
     setPreviewActive(false)
+    
+    // Final seek of the main video on release
+    const result = updateSeek(e.clientX)
+    if (result && videoRef.current) {
+      videoRef.current.currentTime = result.newTime
+    }
+    
     if (e.currentTarget.releasePointerCapture) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
@@ -785,7 +792,9 @@ export default function PlayerView() {
               }}
               style={{ 
                 cursor: showControls ? 'default' : (typeof window !== 'undefined' && window.matchMedia("(pointer: coarse)").matches ? 'default' : 'none'),
-                WebkitTapHighlightColor: 'transparent'
+                WebkitTapHighlightColor: 'transparent',
+                // Disable blurs on low-end mobile to reduce lag
+                backdropFilter: 'none' 
               }}
             >
               {/* Video Element */}
@@ -936,7 +945,7 @@ export default function PlayerView() {
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                     onPointerLeave={() => !isDragging && setPreviewActive(false)}
-                    style={{ touchAction: 'none' }}
+                    style={{ touchAction: 'none', WebkitUserSelect: 'none' }}
                   >
                     {/* Scrubbing Preview */}
                     <AnimatePresence>

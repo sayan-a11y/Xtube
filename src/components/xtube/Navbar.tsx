@@ -105,7 +105,7 @@ export default function Navbar() {
   )
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5 h-14">
+    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#0f0f0f] md:bg-[#0f0f0f]/95 md:backdrop-blur-md border-b border-white/5 h-14">
       <div className="flex items-center justify-between px-4 md:px-6 h-full max-w-[2400px] mx-auto gap-4">
         {/* Left: Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
